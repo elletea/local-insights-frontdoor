@@ -25,6 +25,8 @@ export default function InsightChart() {
   const maxValue = Math.max(...hourlyData.map(d => d.value));
 
   useEffect(() => {
+    const currentRef = chartRef.current;
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -43,11 +45,16 @@ export default function InsightChart() {
       { threshold: 0.2 }
     );
 
-    if (chartRef.current) {
-      observer.observe(chartRef.current);
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
-    return () => observer.disconnect();
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+      observer.disconnect();
+    };
   }, []);
 
   return (
