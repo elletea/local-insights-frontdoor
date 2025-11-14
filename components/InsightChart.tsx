@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const hourlyData = [
   { hour: '6am', value: 16.2, orders: 45, label: '6-7am' },
@@ -19,11 +19,39 @@ const hourlyData = [
 
 export default function InsightChart() {
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
+  const [animatedBars, setAnimatedBars] = useState<boolean[]>(new Array(hourlyData.length).fill(false));
+  const chartRef = useRef<HTMLDivElement>(null);
 
   const maxValue = Math.max(...hourlyData.map(d => d.value));
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          // Stagger the bar animations
+          hourlyData.forEach((_, index) => {
+            setTimeout(() => {
+              setAnimatedBars(prev => {
+                const newArr = [...prev];
+                newArr[index] = true;
+                return newArr;
+              });
+            }, index * 80); // 80ms delay between each bar
+          });
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    if (chartRef.current) {
+      observer.observe(chartRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="bg-white rounded-3xl shadow-2xl p-10 mb-6">
+    <div ref={chartRef} className="bg-white rounded-3xl shadow-2xl p-10 mb-6">
       <div className="mb-8">
         <h3 className="text-3xl font-bold text-black mb-3">
           Hourly Breakdown
@@ -64,12 +92,15 @@ export default function InsightChart() {
 
                 {/* Bar */}
                 <div
-                  className={`w-full rounded-t-2xl transition-all duration-300 ${
+                  className={`w-full rounded-t-2xl transition-all duration-500 ${
                     isHighlight
                       ? 'bg-black'
                       : 'bg-gray-300'
                   } ${isHovered ? 'opacity-100 scale-105' : 'opacity-100'}`}
-                  style={{ height: `${heightPercent}%` }}
+                  style={{
+                    height: animatedBars[index] ? `${heightPercent}%` : '0%',
+                    transitionDelay: `${index * 0.05}s`
+                  }}
                 />
 
                 {/* Label */}
