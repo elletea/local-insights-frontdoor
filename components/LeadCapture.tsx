@@ -19,58 +19,51 @@ export default function LeadCapture() {
 
   if (submitted) {
     return (
-      <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 mb-12 text-center animate-fade-in">
+      <div className="bg-white rounded-3xl shadow-2xl p-10 mb-6 text-center animate-fade-in">
         <div className="text-6xl mb-6">🎉</div>
-        <h3 className="text-3xl font-bold text-slate-900 mb-4">
-          Your report is being generated!
+        <h3 className="text-3xl font-bold text-black mb-4">
+          Report is on its way!
         </h3>
-        <p className="text-lg text-slate-600 mb-8">
-          We're analyzing data from thousands of businesses in your area.
-          Check your email in the next 5 minutes for your personalized insights report.
+        <p className="text-lg text-gray-600 mb-8">
+          Check your email in the next 5 minutes for personalized insights about your market.
         </p>
 
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-8">
-          <h4 className="font-bold text-slate-900 mb-4">While you wait, explore:</h4>
-          <div className="grid md:grid-cols-2 gap-4">
-            <a
-              href="#"
-              className="p-4 bg-white rounded-lg shadow hover:shadow-md transition-all text-left"
-            >
-              <div className="text-2xl mb-2">📊</div>
-              <div className="font-semibold text-slate-900">Square Dashboard Demo</div>
-              <div className="text-sm text-slate-600">
-                See how Square helps track your business in real-time
-              </div>
-            </a>
-            <a
-              href="#"
-              className="p-4 bg-white rounded-lg shadow hover:shadow-md transition-all text-left"
-            >
-              <div className="text-2xl mb-2">💬</div>
-              <div className="font-semibold text-slate-900">Talk to a Specialist</div>
-              <div className="text-sm text-slate-600">
-                Get personalized advice on growing your business
-              </div>
-            </a>
-          </div>
+        <div className="grid md:grid-cols-2 gap-4 mb-8">
+          <a
+            href="#"
+            className="p-6 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-all text-left"
+          >
+            <div className="text-3xl mb-3">📊</div>
+            <div className="font-bold text-black mb-2">Square Dashboard</div>
+            <div className="text-sm text-gray-600">
+              Track your business in real-time
+            </div>
+          </a>
+          <a
+            href="#"
+            className="p-6 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-all text-left"
+          >
+            <div className="text-3xl mb-3">💬</div>
+            <div className="font-bold text-black mb-2">Talk to a Specialist</div>
+            <div className="text-sm text-gray-600">
+              Get personalized growth advice
+            </div>
+          </a>
         </div>
 
-        <div className="border-t border-slate-200 pt-8">
-          <p className="text-sm text-slate-500 mb-4">
-            Want even deeper insights? Square sellers get access to:
+        <div className="pt-6 border-t border-gray-200">
+          <p className="text-sm text-gray-500 mb-4">
+            Square sellers get access to:
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <span className="px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
-              Real-time sales analytics
+          <div className="flex flex-wrap justify-center gap-2">
+            <span className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm">
+              Real-time analytics
             </span>
-            <span className="px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
-              Customer behavior tracking
+            <span className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm">
+              Customer tracking
             </span>
-            <span className="px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
+            <span className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm">
               Inventory optimization
-            </span>
-            <span className="px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
-              Team performance metrics
             </span>
           </div>
         </div>
@@ -79,19 +72,18 @@ export default function LeadCapture() {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 mb-12 animate-fade-in">
+    <div className="bg-white rounded-3xl shadow-2xl p-10 mb-6 animate-fade-in">
       <div className="max-w-2xl mx-auto">
-        <h3 className="text-3xl font-bold text-slate-900 mb-3 text-center">
-          Get Your Personalized Market Report
+        <h3 className="text-3xl font-bold text-black mb-3 text-center">
+          Get Your Market Report
         </h3>
-        <p className="text-slate-600 text-center mb-8">
-          Tell us a bit about your business and we'll send you insights specific to your
-          market in the next 5 minutes.
+        <p className="text-gray-600 text-center mb-8">
+          We'll send insights specific to your market in the next 5 minutes.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-slate-900 mb-2">
+            <label htmlFor="email" className="block text-sm font-semibold text-black mb-2">
               Email Address
             </label>
             <input
@@ -100,20 +92,20 @@ export default function LeadCapture() {
               required
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-blue-600 focus:outline-none transition-colors"
+              className="w-full px-5 py-4 rounded-2xl bg-gray-100 border-2 border-transparent focus:border-black focus:outline-none transition-colors text-black"
               placeholder="your@email.com"
             />
           </div>
 
           <div>
-            <label htmlFor="businessType" className="block text-sm font-semibold text-slate-900 mb-2">
-              What type of business? (Optional)
+            <label htmlFor="businessType" className="block text-sm font-semibold text-black mb-2">
+              Business Type (Optional)
             </label>
             <select
               id="businessType"
               value={formData.businessType}
               onChange={(e) => setFormData({ ...formData, businessType: e.target.value })}
-              className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-blue-600 focus:outline-none transition-colors"
+              className="w-full px-5 py-4 rounded-2xl bg-gray-100 border-2 border-transparent focus:border-black focus:outline-none transition-colors text-black"
             >
               <option value="">Select a category...</option>
               <option value="coffee">Coffee Shop / Cafe</option>
@@ -126,7 +118,7 @@ export default function LeadCapture() {
           </div>
 
           <div>
-            <label htmlFor="location" className="block text-sm font-semibold text-slate-900 mb-2">
+            <label htmlFor="location" className="block text-sm font-semibold text-black mb-2">
               Location (Optional)
             </label>
             <input
@@ -134,44 +126,22 @@ export default function LeadCapture() {
               id="location"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 focus:border-blue-600 focus:outline-none transition-colors"
+              className="w-full px-5 py-4 rounded-2xl bg-gray-100 border-2 border-transparent focus:border-black focus:outline-none transition-colors text-black"
               placeholder="City or ZIP code"
             />
-            <p className="mt-2 text-xs text-slate-500">
-              We'll show you insights specific to businesses in your area
-            </p>
           </div>
 
           <button
             type="submit"
-            className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]"
+            className="w-full px-8 py-5 bg-black text-white rounded-2xl font-bold text-lg hover:bg-gray-900 transition-all hover:scale-[1.02]"
           >
-            Send Me My Free Report
+            Send My Free Report
           </button>
 
-          <p className="text-xs text-center text-slate-500">
-            By submitting, you agree to receive insights and updates from Square.
-            <br />
-            Unsubscribe anytime. We respect your privacy.
+          <p className="text-xs text-center text-gray-400">
+            By submitting, you agree to receive insights from Square. Unsubscribe anytime.
           </p>
         </form>
-
-        <div className="mt-8 pt-8 border-t border-slate-200">
-          <div className="flex items-center justify-center gap-8 text-sm text-slate-600">
-            <div className="flex items-center gap-2">
-              <div className="text-green-600">✓</div>
-              <span>No spam</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="text-green-600">✓</div>
-              <span>Instant delivery</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="text-green-600">✓</div>
-              <span>100% free</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

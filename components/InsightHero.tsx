@@ -6,52 +6,41 @@ interface InsightHeroProps {
 
 export default function InsightHero({ onExplore }: InsightHeroProps) {
   return (
-    <section className="text-center mb-12">
-      <div className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-6">
-        Live Business Intelligence from 4M+ Square Merchants
+    <div className="grid md:grid-cols-2 gap-6 mb-6">
+      {/* Main Stat Card */}
+      <div className="bg-white rounded-3xl p-10 shadow-2xl">
+        <div className="text-sm text-gray-400 mb-4">San Francisco Coffee Shops</div>
+        <div className="text-6xl font-bold text-black mb-3">$18.50</div>
+        <div className="text-lg text-gray-600">Average Order Value</div>
       </div>
 
-      <h1 className="text-4xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
-        Coffee shops in San Francisco
-        <br />
-        average{' '}
-        <span className="text-blue-600">$18.50</span>
-        {' '}per order
-      </h1>
+      {/* BUT Card - The Hook */}
+      <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-3xl p-10 shadow-2xl text-white relative overflow-hidden">
+        <div className="absolute top-6 right-6 text-5xl font-black opacity-20">BUT</div>
+        <div className="relative">
+          <div className="text-sm mb-4 font-medium">Morning Rush (7-9am)</div>
+          <div className="text-6xl font-bold mb-3">$24.20</div>
+          <div className="text-lg opacity-90">31% higher than average</div>
+        </div>
+      </div>
 
-      <div className="relative inline-block">
-        <div className="absolute -inset-4 bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-400 opacity-30 blur-xl" />
-        <h2 className="relative text-3xl md:text-5xl font-bold text-slate-900 mb-8">
-          <span className="text-orange-600">BUT</span> between 7-9am,
-          <br />
-          that jumps to{' '}
-          <span className="bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-            $24.20
-          </span>
+      {/* Insight Description Card */}
+      <div className="md:col-span-2 bg-white rounded-3xl p-10 shadow-2xl">
+        <h2 className="text-3xl font-bold text-black mb-4">
+          What else are you missing about your market?
         </h2>
+        <p className="text-lg text-gray-600 mb-6">
+          Discover hidden patterns in local business data from 4M+ Square merchants.
+          Most business owners never see insights like this.
+        </p>
+        <button
+          onClick={onExplore}
+          className="group bg-black text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-900 transition-all hover:scale-[1.02] inline-flex items-center gap-2"
+        >
+          Explore This Insight
+          <span className="group-hover:translate-x-1 transition-transform">→</span>
+        </button>
       </div>
-
-      <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto">
-        Discover the hidden patterns in local business data that most owners miss.
-        <br />
-        <span className="font-semibold text-slate-900">
-          What else could you be missing about your market?
-        </span>
-      </p>
-
-      <button
-        onClick={onExplore}
-        className="group px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
-      >
-        Explore This Insight
-        <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">
-          →
-        </span>
-      </button>
-
-      <p className="mt-4 text-sm text-slate-500">
-        No credit card required • See insights in 30 seconds
-      </p>
-    </section>
+    </div>
   );
 }

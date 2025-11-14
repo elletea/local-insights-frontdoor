@@ -23,19 +23,19 @@ export default function InsightChart() {
   const maxValue = Math.max(...hourlyData.map(d => d.value));
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 mb-12">
+    <div className="bg-white rounded-3xl shadow-2xl p-10 mb-6">
       <div className="mb-8">
-        <h3 className="text-2xl font-bold text-slate-900 mb-2">
-          Average Order Value by Hour
+        <h3 className="text-3xl font-bold text-black mb-3">
+          Hourly Breakdown
         </h3>
-        <p className="text-slate-600">
-          San Francisco Coffee Shops • Based on 127,000+ transactions
+        <p className="text-gray-500">
+          127,000+ transactions • San Francisco area
         </p>
       </div>
 
       {/* Chart */}
       <div className="relative h-80 mb-8">
-        <div className="absolute inset-0 flex items-end justify-between gap-2 px-4">
+        <div className="absolute inset-0 flex items-end justify-between gap-2">
           {hourlyData.map((data, index) => {
             const heightPercent = (data.value / maxValue) * 100;
             const isHovered = hoveredBar === index;
@@ -50,36 +50,30 @@ export default function InsightChart() {
               >
                 {/* Tooltip */}
                 {isHovered && (
-                  <div className="absolute -top-24 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-xl z-10 whitespace-nowrap">
-                    <div className="text-sm font-semibold mb-1">{data.label}</div>
-                    <div className="text-2xl font-bold text-blue-400">
+                  <div className="absolute -top-28 left-1/2 -translate-x-1/2 bg-black text-white px-5 py-4 rounded-2xl shadow-2xl z-10 whitespace-nowrap">
+                    <div className="text-sm font-medium mb-2 opacity-70">{data.label}</div>
+                    <div className="text-3xl font-bold mb-2">
                       ${data.value.toFixed(2)}
                     </div>
-                    <div className="text-xs text-slate-300 mt-1">
+                    <div className="text-xs opacity-60">
                       {data.orders} orders
                     </div>
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45" />
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-black rotate-45" />
                   </div>
                 )}
 
                 {/* Bar */}
                 <div
-                  className={`w-full rounded-t-lg transition-all duration-300 ${
+                  className={`w-full rounded-t-2xl transition-all duration-300 ${
                     isHighlight
                       ? 'bg-gradient-to-t from-orange-500 to-red-500'
-                      : 'bg-gradient-to-t from-blue-400 to-blue-600'
-                  } ${isHovered ? 'opacity-100 scale-105' : 'opacity-90'}`}
+                      : 'bg-gray-200'
+                  } ${isHovered ? 'opacity-100 scale-105' : 'opacity-100'}`}
                   style={{ height: `${heightPercent}%` }}
-                >
-                  {isHighlight && (
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-bold whitespace-nowrap">
-                      Peak Hours
-                    </div>
-                  )}
-                </div>
+                />
 
                 {/* Label */}
-                <div className="mt-2 text-xs text-slate-600 font-medium -rotate-45 origin-top-left">
+                <div className="mt-3 text-xs text-gray-400 font-medium">
                   {data.hour}
                 </div>
               </div>
@@ -89,31 +83,25 @@ export default function InsightChart() {
       </div>
 
       {/* Insight Callout */}
-      <div className="bg-gradient-to-r from-orange-50 to-red-50 border-l-4 border-orange-500 p-6 rounded-r-xl">
-        <div className="flex items-start gap-4">
-          <div className="text-3xl">💡</div>
-          <div>
-            <h4 className="font-bold text-slate-900 mb-2">Why This Matters</h4>
-            <p className="text-slate-700 mb-3">
-              Morning commuters spend <strong>31% more per order</strong> than the daily
-              average. They're ordering premium drinks, adding food, and tipping higher.
-            </p>
-            <p className="text-sm text-slate-600">
-              <strong>Action:</strong> Coffee shops that optimize staffing and inventory
-              for 7-9am see 23% higher daily revenue. Most don't realize this opportunity
-              exists.
-            </p>
-          </div>
-        </div>
+      <div className="bg-gray-100 rounded-2xl p-6">
+        <h4 className="font-bold text-black mb-3 text-lg">💡 Why This Matters</h4>
+        <p className="text-gray-700 mb-3">
+          Morning commuters spend <strong>31% more per order</strong> than the daily
+          average. They're ordering premium drinks, adding food, and tipping higher.
+        </p>
+        <p className="text-sm text-gray-600">
+          Coffee shops that optimize for 7-9am see 23% higher daily revenue. Most don't
+          realize this opportunity exists.
+        </p>
       </div>
 
       {/* Data Attribution */}
-      <div className="mt-6 pt-6 border-t border-slate-200 flex items-center justify-between text-sm text-slate-500">
+      <div className="mt-6 pt-6 border-t border-gray-200 flex items-center justify-between text-sm text-gray-400">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          <span>Live data updated hourly</span>
+          <span>Live data</span>
         </div>
-        <div>Source: Square Network</div>
+        <div>Square Network</div>
       </div>
     </div>
   );
