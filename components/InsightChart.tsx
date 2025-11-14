@@ -66,8 +66,8 @@ export default function InsightChart() {
                 <div
                   className={`w-full rounded-t-2xl transition-all duration-300 ${
                     isHighlight
-                      ? 'bg-gradient-to-t from-orange-500 to-red-500'
-                      : 'bg-gray-200'
+                      ? 'bg-black'
+                      : 'bg-gray-300'
                   } ${isHovered ? 'opacity-100 scale-105' : 'opacity-100'}`}
                   style={{ height: `${heightPercent}%` }}
                 />
@@ -98,7 +98,7 @@ export default function InsightChart() {
       {/* Data Attribution */}
       <div className="mt-6 pt-6 border-t border-gray-200 flex items-center justify-between text-sm text-gray-400">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <div className="w-2 h-2 bg-black rounded-full animate-pulse" />
           <span>Live data</span>
         </div>
         <div>Square Network</div>

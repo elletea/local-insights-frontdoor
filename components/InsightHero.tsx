@@ -15,12 +15,12 @@ export default function InsightHero({ onExplore }: InsightHeroProps) {
       </div>
 
       {/* BUT Card - The Hook */}
-      <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-3xl p-10 shadow-2xl text-white relative overflow-hidden">
-        <div className="absolute top-6 right-6 text-5xl font-black opacity-20">BUT</div>
+      <div className="bg-black rounded-3xl p-10 shadow-2xl text-white relative overflow-hidden">
+        <div className="absolute top-6 right-6 text-5xl font-black opacity-10">BUT</div>
         <div className="relative">
-          <div className="text-sm mb-4 font-medium">Morning Rush (7-9am)</div>
+          <div className="text-sm mb-4 font-medium text-gray-400">Morning Rush (7-9am)</div>
           <div className="text-6xl font-bold mb-3">$24.20</div>
-          <div className="text-lg opacity-90">31% higher than average</div>
+          <div className="text-lg text-gray-300">31% higher than average</div>
         </div>
       </div>
 
