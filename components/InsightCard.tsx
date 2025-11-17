@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const businessTypes = ['coffee shops', 'retailers', 'salons', 'bakeries'];
 
@@ -20,14 +20,65 @@ const insights = [
   'morning hours see the strongest demand.',
 ];
 
+// Metrics for the chart dropdown
+const metrics = [
+  'Average order value',
+  'Peak sales hours',
+  'Customer frequency',
+  'Weekend vs weekday sales',
+];
+
+// Locations for the location dropdown
+const locations = [
+  'San Francisco',
+  'Mission District',
+  'Hayes Valley',
+  'Castro',
+  'Marina',
+];
+
 export default function InsightCard() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isChartDropdownOpen, setIsChartDropdownOpen] = useState(false);
+  const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hideRightPanel, setHideRightPanel] = useState(false);
+  const [mapPosition, setMapPosition] = useState({ x: 0, y: 0 });
+  const [scrollY, setScrollY] = useState(0);
+  const [hasScrolled, setHasScrolled] = useState(false);
+  const [mapRevealed, setMapRevealed] = useState(false);
+  const [selectedMetric, setSelectedMetric] = useState(0);
+  const [selectedLocation, setSelectedLocation] = useState(0);
+  const [showCTA, setShowCTA] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleRevealMap = () => {
+    setMapRevealed(true);
+
+    // Animate the scroll to reveal the map
+    let startTime: number | null = null;
+    const duration = 1000; // 1 second animation
+
+    const animateScroll = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Ease-out cubic for smooth deceleration
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+      setScrollY(easeProgress * 800); // Animate from 0 to 800
+
+      if (progress < 1) {
+        requestAnimationFrame(animateScroll);
+      }
+    };
+
+    requestAnimationFrame(animateScroll);
+  };
 
   const handleBusinessTypeClick = (index: number) => {
     if (index === currentIndex) return;
@@ -48,42 +99,158 @@ export default function InsightCard() {
     setTimeout(() => {
       setIsExpanded(true);
     }, 700);
+
+    // 3. Show CTA after chart data loads (2200ms = 700ms + 1500ms)
+    setTimeout(() => {
+      setShowCTA(true);
+    }, 2200);
   };
 
+  // Handle scroll to reveal the map
+  useEffect(() => {
+    if (!isExpanded || !containerRef.current) return;
+
+    const handleScroll = (e: WheelEvent) => {
+      if (!mapRevealed && e.deltaY > 0) {
+        setMapRevealed(true);
+      }
+    };
+
+    const container = containerRef.current;
+    container.addEventListener('wheel', handleScroll);
+
+    return () => {
+      container.removeEventListener('wheel', handleScroll);
+    };
+  }, [isExpanded, mapRevealed]);
+
   return (
-    <div className="relative w-full h-full bg-white overflow-hidden">
+    <div ref={containerRef} className="relative w-full h-full bg-white overflow-hidden">
       {/* Background Image - Full width container */}
-      <div className="absolute left-0 top-0 w-full h-full overflow-hidden">
+      <div className={`absolute left-0 top-0 h-full overflow-hidden transition-all duration-700 ${
+        mapRevealed ? 'w-1/2' : 'w-full'
+      }`}>
+        {/* Coffee shop image - always visible as base layer */}
         <img
           src={businessImages[currentIndex]}
           alt={`${businessTypes[currentIndex]} background`}
-          className={`w-full h-full object-cover transition-opacity duration-500 ${
+          className={`absolute left-0 top-0 w-full h-full object-cover transition-opacity duration-500 ${
             isAnimating ? 'opacity-0' : 'opacity-100'
           }`}
         />
-        {/* Dark overlay when expanded */}
-        <div className={`absolute inset-0 bg-black/20 transition-opacity duration-700 ${
-          isExpanded ? 'opacity-100' : 'opacity-0'
-        }`} />
+
+        {/* Map that slides up from bottom on scroll - only when expanded and revealed */}
+        {isExpanded && mapRevealed && (
+          <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden">
+            <img
+              src="/map-streets.png"
+              alt="Interactive neighborhood map"
+              className="absolute w-full h-full object-cover transition-transform duration-300 ease-out"
+              style={{
+                transform: `translateY(${100 - Math.min(100, (scrollY / 800) * 100)}%)`,
+              }}
+            />
+          </div>
+        )}
+
       </div>
 
       {/* Chart Card Overlay */}
-      <div className={`absolute top-1/2 -translate-y-1/2 bg-white rounded-[10px] shadow-lg flex flex-col transition-all duration-700 ${
-        hideRightPanel
-          ? 'left-1/2 -translate-x-1/2 w-[591px] p-10 gap-10'
-          : 'left-[25%] -translate-x-1/2 w-[360px] p-5 gap-[30px]'
-      }`}>
-        {/* Dropdown */}
-        <div className="relative">
+      <div
+        className={`absolute top-1/2 -translate-y-1/2 bg-white rounded-[10px] shadow-lg flex flex-col transition-all duration-700 ${
+          hideRightPanel
+            ? 'left-1/2 -translate-x-1/2 w-[591px] p-10 gap-10'
+            : 'left-[25%] -translate-x-1/2 w-[360px] p-5 gap-[30px]'
+        }`}
+      >
+        {/* Dropdowns - Metric and Location */}
+        <div className="flex gap-5 w-full">
+          <div
+            className="relative transition-all duration-700"
+            style={{
+              flex: showCTA && !mapRevealed ? '1' : '2',
+            }}
+          >
+            <button
+              onClick={() => setIsChartDropdownOpen(!isChartDropdownOpen)}
+              className="w-full bg-white border border-[#d3d3d3] rounded-[30px] h-[56px] flex items-center justify-center px-5 py-[10px] hover:bg-gray-50 transition-colors"
+            >
+              <span className="font-medium text-base text-[rgba(0,0,0,0.9)]">
+                {metrics[selectedMetric]}
+              </span>
+            </button>
+
+            {/* Metric Dropdown Menu */}
+            {isChartDropdownOpen && (
+              <div className="absolute top-full mt-2 left-0 right-0 bg-white border border-[#d3d3d3] rounded-2xl shadow-lg overflow-hidden z-10">
+                {metrics.map((metric, index) => (
+                  <button
+                    key={metric}
+                    onClick={() => {
+                      setSelectedMetric(index);
+                      setIsChartDropdownOpen(false);
+                    }}
+                    className={`w-full px-5 py-3 text-left font-medium text-base hover:bg-gray-50 transition-colors ${
+                      selectedMetric === index
+                        ? 'bg-gray-100 text-black'
+                        : 'text-[rgba(0,0,0,0.9)]'
+                    }`}
+                  >
+                    {metric}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Location matters CTA button - appears when showCTA is true */}
+          {isExpanded && showCTA && !mapRevealed && (
+            <div className="flex-1">
               <button
-                onClick={() => setIsChartDropdownOpen(!isChartDropdownOpen)}
+                onClick={handleRevealMap}
+                className="w-full bg-black text-white rounded-[30px] h-[56px] flex items-center justify-center px-5 py-[10px] hover:bg-gray-800 transition-colors font-medium text-base animate-[popIn_800ms_ease-in-out_forwards]"
+              >
+                ... and location matters
+              </button>
+            </div>
+          )}
+
+          {/* Location dropdown - only appears when map is revealed */}
+          {isExpanded && mapRevealed && (
+            <div className="relative flex-1 animate-[fadeIn_500ms_ease-in-out_forwards]">
+              <button
+                onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
                 className="w-full bg-white border border-[#d3d3d3] rounded-[30px] h-[56px] flex items-center justify-center px-5 py-[10px] hover:bg-gray-50 transition-colors"
               >
                 <span className="font-medium text-base text-[rgba(0,0,0,0.9)]">
-                  Average order value
+                  {locations[selectedLocation]}
                 </span>
               </button>
+
+              {/* Location Dropdown Menu */}
+              {isLocationDropdownOpen && (
+                <div className="absolute top-full mt-2 left-0 right-0 bg-white border border-[#d3d3d3] rounded-2xl shadow-lg overflow-hidden z-10">
+                  {locations.map((location, index) => (
+                    <button
+                      key={location}
+                      onClick={() => {
+                        setSelectedLocation(index);
+                        setIsLocationDropdownOpen(false);
+                      }}
+                      className={`w-full px-5 py-3 text-left font-medium text-base hover:bg-gray-50 transition-colors ${
+                        selectedLocation === index
+                          ? 'bg-gray-100 text-black'
+                          : 'text-[rgba(0,0,0,0.9)]'
+                      }`}
+                    >
+                      {location}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+          )}
+        </div>
 
         {/* Chart */}
         <div className="flex flex-col gap-[40px] w-full">
@@ -204,25 +371,37 @@ export default function InsightCard() {
         {isExpanded && (
           <div className="flex flex-col gap-[10px] w-full text-[#101010]">
             <p className="font-serif text-[24px] leading-[1.2] tracking-[-0.48px]">
-              Our data shows morning rush between 7-9am beats lunch by 31%
+              {mapRevealed
+                ? "Here's the data: Morning rush drives 31% higher order value"
+                : "Our data shows morning rush between 7-9am beats lunch by 31%"
+              }
             </p>
             <p className="font-normal text-[18px] leading-[1.5] tracking-[-0.36px]">
-              Average order value jumps from $18.50 to 24.20 during these hours.
+              {mapRevealed ? (
+                <>
+                  <span className="text-[#666666]">General data shows $18.50 average.</span>{' '}
+                  <span className="font-semibold">With a LOCAL lens: $24.20 during 7-9am in {locations[selectedLocation]}.</span>
+                </>
+              ) : (
+                "Average order value jumps from $18.50 to 24.20 during these hours."
+              )}
             </p>
           </div>
         )}
       </div>
 
+
+
       {/* Content Card - Right Side */}
       <div className={`absolute top-0 w-[50%] h-full bg-white overflow-hidden flex items-center justify-center transition-all duration-700 ${
         hideRightPanel ? 'right-[-50%] opacity-0 pointer-events-none' : 'right-0 opacity-100'
       }`}>
-        <div className="w-[589px] flex flex-col items-center gap-10">
+        <div className="w-[589px] flex flex-col items-center gap-16">
           {/* Heading */}
-          <div className="w-full text-center flex flex-col gap-5">
+          <div className="w-full text-center flex flex-col gap-12">
             {/* Text with Dropdown */}
             <div className="flex items-center justify-center gap-[10px]">
-              <p className="font-serif text-[32px] leading-[1.1] tracking-[-0.64px] text-[#666666]">
+              <p className="font-serif text-[32px] leading-[1.1] tracking-[-0.64px] text-black">
                 Most
               </p>
 
@@ -232,7 +411,7 @@ export default function InsightCard() {
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="border border-[#959595] rounded-full pl-6 pr-4 py-4 flex items-center gap-[8px] hover:bg-gray-50 transition-colors"
                 >
-                  <span className="font-serif text-[32px] leading-[1.1] tracking-[-0.64px] text-[#666666] whitespace-nowrap">
+                  <span className="font-serif text-[32px] leading-[1.1] tracking-[-0.64px] text-black whitespace-nowrap">
                     {businessTypes[currentIndex]}
                   </span>
                   <div className="flex items-center justify-center p-1">
@@ -276,7 +455,7 @@ export default function InsightCard() {
                 )}
               </div>
 
-              <p className="font-serif text-[32px] leading-[1.1] tracking-[-0.64px] text-[#666666]">
+              <p className="font-serif text-[32px] leading-[1.1] tracking-[-0.64px] text-black">
                 think
               </p>
             </div>
