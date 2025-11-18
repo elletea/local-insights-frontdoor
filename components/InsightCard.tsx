@@ -311,9 +311,8 @@ const chartDataByBusinessType = {
   },
 };
 
-// Locations for the location dropdown
+// Locations for the location dropdown (pre-canned neighborhoods only)
 const locations = [
-  'San Francisco',
   'Mission District',
   'Hayes Valley',
   'Castro',
@@ -335,8 +334,14 @@ export default function InsightCard() {
   const [mapRevealed, setMapRevealed] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState(0);
   const [selectedLocation, setSelectedLocation] = useState(0);
-  const [locationInput, setLocationInput] = useState('San Francisco');
+  const [locationInput, setLocationInput] = useState('');
   const [showCTA, setShowCTA] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({
+    zipCode: '',
+    email: '',
+    businessType: '',
+  });
   const containerRef = useRef<HTMLDivElement>(null);
   const locationInputRef = useRef<HTMLDivElement>(null);
 
@@ -675,7 +680,7 @@ export default function InsightCard() {
           }`}>
             {/* Y Axis Labels - Always visible */}
             <div className="flex flex-col justify-between pb-[25px] text-xs text-[#666666] tracking-[0.12px]">
-              {currentMetric === 'Sales growth' ? (
+              {currentMetric === 'Sales growth' || currentMetric === 'Peak sales hours' ? (
                 <>
                   <span>20%</span>
                   <span>15%</span>
@@ -885,15 +890,31 @@ export default function InsightCard() {
               <div className="flex gap-[12px] items-start justify-start px-[10px] text-xs text-[#666666] tracking-[0.12px]">
                 {isExpanded ? (
                   <>
-                    {currentMetric !== 'Peak sales hours' && dataToDisplay.map((item: any, index: number) => (
-                      <div
-                        key={index}
-                        className="flex-1 text-center opacity-0 animate-[fadeIn_300ms_ease-in-out_forwards]"
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
-                        {item.time}
-                      </div>
-                    ))}
+                    {currentMetric === 'Peak sales hours' ? (
+                      <>
+                        {['9am', '10am', '11am', '12pm', '1pm', '2pm', '3pm', '4pm', '5pm'].map((hour, index) => (
+                          <div
+                            key={index}
+                            className="flex-1 text-center opacity-0 animate-[fadeIn_300ms_ease-in-out_forwards]"
+                            style={{ animationDelay: `${index * 50}ms` }}
+                          >
+                            {hour}
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      <>
+                        {dataToDisplay.map((item: any, index: number) => (
+                          <div
+                            key={index}
+                            className="flex-1 text-center opacity-0 animate-[fadeIn_300ms_ease-in-out_forwards]"
+                            style={{ animationDelay: `${index * 50}ms` }}
+                          >
+                            {item.time}
+                          </div>
+                        ))}
+                      </>
+                    )}
                   </>
                 ) : (
                   <>
@@ -921,27 +942,40 @@ export default function InsightCard() {
 
         {/* Insight Text - Only visible when expanded */}
         {isExpanded && (
-          <div className="flex flex-col gap-[10px] w-full text-[#101010]">
-            <p className="font-serif text-[24px] leading-[1.2] tracking-[-0.48px]">
-              {currentBusinessType === 'retailers'
-                ? (mapRevealed
-                    ? "In San Francisco, Friday midday sees the most consistent high traffic"
-                    : "While weekends see traffic, weekday lunch hours show sustained peak sales")
-                : (mapRevealed
-                    ? "In San Francisco, 7am hits peak order value at $24.20"
-                    : "Our data shows morning rush between 7-9am beats lunch by 31%")
-              }
-            </p>
-            <p className="font-normal text-[18px] leading-[1.5] tracking-[-0.36px]">
-              {currentBusinessType === 'retailers'
-                ? (mapRevealed
-                    ? "Thursday through Saturday, 10am-2pm shows the densest concentration of high-traffic periods."
-                    : "Thursday-Friday 10am-2pm consistently outperform weekend shopping windows.")
-                : (mapRevealed
-                    ? "That's 31% higher than the city-wide average of $18.50."
-                    : "Average order value jumps from $18.50 to 24.20 during these hours.")
-              }
-            </p>
+          <div className="flex flex-col gap-[20px] w-full text-[#101010]">
+            <div className="flex flex-col gap-[10px]">
+              <p className="font-serif text-[24px] leading-[1.2] tracking-[-0.48px]">
+                {currentBusinessType === 'retailers'
+                  ? (mapRevealed
+                      ? "In San Francisco, Friday midday sees the most consistent high traffic"
+                      : "While weekends see traffic, weekday lunch hours show sustained peak sales")
+                  : (mapRevealed
+                      ? "In San Francisco, 7am hits peak order value at $24.20"
+                      : "Our data shows morning rush between 7-9am beats lunch by 31%")
+                }
+              </p>
+              <p className="font-normal text-[18px] leading-[1.5] tracking-[-0.36px]">
+                {currentBusinessType === 'retailers'
+                  ? (mapRevealed
+                      ? "Thursday through Saturday, 10am-2pm shows the densest concentration of high-traffic periods."
+                      : "Thursday-Friday 10am-2pm consistently outperform weekend shopping windows.")
+                  : (mapRevealed
+                      ? "That's 31% higher than the city-wide average of $18.50."
+                      : "Average order value jumps from $18.50 to 24.20 during these hours.")
+                }
+              </p>
+            </div>
+
+            {/* Get Personalized Insights CTA */}
+            <button
+              onClick={() => {
+                setFormData({ ...formData, businessType: currentBusinessType });
+                setShowModal(true);
+              }}
+              className="w-full bg-black text-white rounded-[30px] h-[56px] flex items-center justify-center px-5 py-[10px] hover:bg-gray-800 transition-colors font-medium text-base"
+            >
+              Get personalized insights for my business
+            </button>
           </div>
         )}
       </div>
@@ -1037,6 +1071,105 @@ export default function InsightCard() {
           </button>
         </div>
       </div>
+
+      {/* Personalized Insights Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative animate-[fadeIn_300ms_ease-in-out_forwards]">
+            {/* Close button */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Modal content */}
+            <div className="flex flex-col gap-6">
+              <div>
+                <h3 className="font-serif text-[28px] leading-[1.2] tracking-[-0.56px] text-black mb-2">
+                  Get hyper-local insights
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  See data within 0.5 miles of your business and get weekly insights delivered to your inbox.
+                </p>
+              </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  // TODO: Handle form submission
+                  console.log('Form submitted:', formData);
+                  setShowModal(false);
+                }}
+                className="flex flex-col gap-4"
+              >
+                {/* Zip Code */}
+                <div>
+                  <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-2">
+                    Zip Code *
+                  </label>
+                  <input
+                    id="zipCode"
+                    type="text"
+                    required
+                    value={formData.zipCode}
+                    onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                    placeholder="94110"
+                    className="w-full border border-gray-300 rounded-2xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-10 transition-all"
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    Email *
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="you@business.com"
+                    className="w-full border border-gray-300 rounded-2xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-10 transition-all"
+                  />
+                </div>
+
+                {/* Business Type */}
+                <div>
+                  <label htmlFor="businessType" className="block text-sm font-medium text-gray-700 mb-2">
+                    Business Type *
+                  </label>
+                  <select
+                    id="businessType"
+                    required
+                    value={formData.businessType}
+                    onChange={(e) => setFormData({ ...formData, businessType: e.target.value })}
+                    className="w-full border border-gray-300 rounded-2xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-10 transition-all bg-white"
+                  >
+                    {businessTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  className="w-full bg-black text-white rounded-[30px] h-[56px] flex items-center justify-center px-5 py-3 hover:bg-gray-800 transition-colors font-medium text-base mt-2"
+                >
+                  Get my personalized insights
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
