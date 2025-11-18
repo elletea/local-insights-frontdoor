@@ -126,22 +126,22 @@ const chartDataByBusinessType = {
     },
     'Peak sales hours': {
       general: [
-        { day: 'Mon', hours: ['low', 'medium', 'medium', 'high', 'medium', 'medium', 'low', 'low', 'low'] },
-        { day: 'Tue', hours: ['low', 'medium', 'medium', 'high', 'medium', 'medium', 'medium', 'low', 'low'] },
-        { day: 'Wed', hours: ['low', 'medium', 'high', 'high', 'high', 'medium', 'medium', 'low', 'low'] },
-        { day: 'Thu', hours: ['medium', 'medium', 'high', 'high', 'high', 'medium', 'medium', 'low', 'low'] },
-        { day: 'Fri', hours: ['medium', 'high', 'high', 'high', 'high', 'high', 'medium', 'medium', 'low'] },
-        { day: 'Sat', hours: ['high', 'high', 'high', 'high', 'high', 'high', 'medium', 'medium', 'low'] },
-        { day: 'Sun', hours: ['medium', 'high', 'high', 'high', 'medium', 'medium', 'low', 'low', 'low'] },
+        { day: 'Mon', hours: ['low', 'medium', 'medium', 'high', 'medium', 'medium', 'low', 'low', 'low', 'low', 'low', 'low', 'low', 'low'] },
+        { day: 'Tue', hours: ['low', 'medium', 'medium', 'high', 'medium', 'medium', 'medium', 'low', 'low', 'low', 'low', 'low', 'low', 'low'] },
+        { day: 'Wed', hours: ['low', 'medium', 'high', 'peak', 'high', 'medium', 'medium', 'low', 'low', 'low', 'low', 'low', 'low', 'low'] },
+        { day: 'Thu', hours: ['medium', 'medium', 'high', 'peak', 'high', 'medium', 'medium', 'low', 'low', 'low', 'medium', 'medium', 'low', 'low'] },
+        { day: 'Fri', hours: ['medium', 'high', 'peak', 'peak', 'peak', 'high', 'medium', 'medium', 'medium', 'high', 'high', 'medium', 'low', 'low'] },
+        { day: 'Sat', hours: ['high', 'peak', 'peak', 'peak', 'peak', 'high', 'medium', 'medium', 'high', 'high', 'high', 'medium', 'medium', 'low'] },
+        { day: 'Sun', hours: ['medium', 'high', 'high', 'high', 'medium', 'medium', 'low', 'low', 'low', 'medium', 'medium', 'low', 'low', 'low'] },
       ],
       local: [
-        { day: 'Mon', hours: ['low', 'medium', 'medium', 'high', 'high', 'medium', 'low', 'low', 'low'] },
-        { day: 'Tue', hours: ['low', 'medium', 'high', 'high', 'medium', 'medium', 'low', 'low', 'low'] },
-        { day: 'Wed', hours: ['low', 'high', 'high', 'high', 'high', 'medium', 'medium', 'low', 'low'] },
-        { day: 'Thu', hours: ['medium', 'high', 'high', 'high', 'high', 'high', 'medium', 'low', 'low'] },
-        { day: 'Fri', hours: ['high', 'high', 'high', 'high', 'high', 'high', 'high', 'medium', 'low'] },
-        { day: 'Sat', hours: ['high', 'high', 'high', 'high', 'high', 'high', 'high', 'medium', 'low'] },
-        { day: 'Sun', hours: ['medium', 'high', 'high', 'high', 'high', 'medium', 'low', 'low', 'low'] },
+        { day: 'Mon', hours: ['low', 'medium', 'medium', 'high', 'high', 'medium', 'low', 'low', 'low', 'low', 'low', 'low', 'low', 'low'] },
+        { day: 'Tue', hours: ['low', 'medium', 'high', 'high', 'medium', 'medium', 'low', 'low', 'low', 'low', 'low', 'low', 'low', 'low'] },
+        { day: 'Wed', hours: ['low', 'high', 'peak', 'peak', 'high', 'medium', 'medium', 'low', 'low', 'low', 'medium', 'low', 'low', 'low'] },
+        { day: 'Thu', hours: ['medium', 'high', 'peak', 'peak', 'peak', 'high', 'medium', 'low', 'low', 'medium', 'high', 'medium', 'low', 'low'] },
+        { day: 'Fri', hours: ['high', 'peak', 'peak', 'peak', 'peak', 'peak', 'high', 'medium', 'high', 'peak', 'peak', 'high', 'medium', 'low'] },
+        { day: 'Sat', hours: ['high', 'peak', 'peak', 'peak', 'peak', 'peak', 'high', 'medium', 'high', 'peak', 'peak', 'high', 'medium', 'low'] },
+        { day: 'Sun', hours: ['medium', 'high', 'peak', 'high', 'high', 'medium', 'low', 'low', 'medium', 'high', 'medium', 'low', 'low', 'low'] },
       ],
     },
     'Sales growth': {
@@ -390,10 +390,12 @@ export default function InsightCard() {
   // Helper function to render intensity-based heatmap
   const getIntensityColor = (intensity: string) => {
     switch (intensity) {
-      case 'high':
+      case 'peak':
         return 'bg-black';
-      case 'medium':
+      case 'high':
         return 'bg-[#666666]';
+      case 'medium':
+        return 'bg-[#999999]';
       case 'low':
         return 'bg-[#dadada]';
       default:
@@ -542,8 +544,29 @@ export default function InsightCard() {
     }
   }, [isLocationDropdownOpen]);
 
+  const handleStartOver = () => {
+    setHideRightPanel(false);
+    setIsExpanded(false);
+    setShowCTA(false);
+    setMapRevealed(false);
+    setScrollY(0);
+    // Reset metric based on business type - retailers default to Peak sales hours (1), others to Average order value (0)
+    setSelectedMetric(currentBusinessType === 'retailers' ? 1 : 0);
+    setLocationInput('');
+  };
+
   return (
     <div ref={containerRef} className="relative w-full h-full bg-white overflow-hidden">
+      {/* Start Over button - upper left corner, only visible when expanded */}
+      {isExpanded && (
+        <button
+          onClick={handleStartOver}
+          className="absolute top-8 left-8 z-50 bg-white border border-[#d3d3d3] rounded-full px-6 py-3 hover:bg-gray-50 transition-colors font-medium text-sm text-[rgba(0,0,0,0.9)] shadow-sm"
+        >
+          ← Start over
+        </button>
+      )}
+
       {/* Coffee shop image - always full width */}
       <div className="absolute left-0 top-0 w-full h-full overflow-hidden">
         <img
@@ -680,7 +703,24 @@ export default function InsightCard() {
           }`}>
             {/* Y Axis Labels - Always visible */}
             <div className="flex flex-col justify-between pb-[25px] text-xs text-[#666666] tracking-[0.12px]">
-              {currentMetric === 'Sales growth' || currentMetric === 'Peak sales hours' ? (
+              {currentMetric === 'Peak sales hours' && isExpanded ? (
+                <>
+                  <span>Mon</span>
+                  <span>Tue</span>
+                  <span>Wed</span>
+                  <span>Thu</span>
+                  <span>Fri</span>
+                  <span>Sat</span>
+                  <span>Sun</span>
+                </>
+              ) : currentMetric === 'Peak sales hours' && currentBusinessType === 'retailers' ? (
+                <>
+                  <span>Thu</span>
+                  <span>Fri</span>
+                  <span>Sat</span>
+                  <span>Sun</span>
+                </>
+              ) : currentMetric === 'Sales growth' ? (
                 <>
                   <span>20%</span>
                   <span>15%</span>
@@ -703,9 +743,25 @@ export default function InsightCard() {
             <div className="flex-1 flex flex-col gap-[10px] relative">
               {/* Grid Lines - Always visible, grows with card */}
               <div className="absolute left-[3px] right-0 top-0 bottom-[24px] flex flex-col justify-between z-0">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="w-full h-[1px] bg-[#f0f0f0] transition-all duration-700" />
-                ))}
+                {currentMetric === 'Peak sales hours' && isExpanded ? (
+                  <>
+                    {[...Array(8)].map((_, i) => (
+                      <div key={i} className="w-full h-[1px] bg-[#f0f0f0] transition-all duration-700" />
+                    ))}
+                  </>
+                ) : currentMetric === 'Peak sales hours' && currentBusinessType === 'retailers' ? (
+                  <>
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="w-full h-[1px] bg-[#f0f0f0] transition-all duration-700" />
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="w-full h-[1px] bg-[#f0f0f0] transition-all duration-700" />
+                    ))}
+                  </>
+                )}
               </div>
 
               {/* Bars - Fade out old, fade in new */}
@@ -714,16 +770,16 @@ export default function InsightCard() {
                   <>
                     {/* Expanded view: Dynamic rendering based on metric type */}
                     {currentMetric === 'Peak sales hours' ? (
-                      <div className="w-full h-full flex flex-col gap-[3px] opacity-0 animate-[fadeIn_500ms_ease-in-out_forwards]">
+                      <div className="w-full h-full flex flex-col gap-[2px] opacity-0 animate-[fadeIn_500ms_ease-in-out_forwards]">
                         {/* Heatmap grid visualization for Peak sales hours */}
                         {dataToDisplay.map((dayData: any, dayIndex: number) => (
-                          <div key={dayIndex} className="flex gap-[3px] flex-1">
+                          <div key={dayIndex} className="flex gap-[2px] flex-1">
                             {dayData.hours.map((intensity: string, hourIndex: number) => {
                               const intensityColor = getIntensityColor(intensity);
                               return (
                                 <div
                                   key={hourIndex}
-                                  className={`flex-1 ${intensityColor} rounded-[2px] transition-all duration-300 hover:brightness-110 cursor-pointer`}
+                                  className={`flex-1 ${intensityColor} rounded-[1px] transition-all duration-300 hover:brightness-110 cursor-pointer`}
                                 />
                               );
                             })}
@@ -843,17 +899,18 @@ export default function InsightCard() {
                     {/* Collapsed view: 4 bars - Different heights for retailers */}
                     {currentBusinessType === 'retailers' ? (
                       <>
-                        {/* Retailers: 4-column heatmap preview (Thu, Fri, Sat, Sun) */}
-                        <div className="w-full h-full flex gap-[12px]">
+                        {/* Retailers: 4-day heatmap preview (Thu, Fri, Sat, Sun) with abbreviated hours */}
+                        <div className="w-full h-full flex flex-col gap-[2px]">
                           {/* Get Thu-Sun data (indices 3-6 from the general data) */}
                           {chartDataByBusinessType['retailers']['Peak sales hours'].general.slice(3, 7).map((dayData: any, dayIndex: number) => (
-                            <div key={dayIndex} className="flex-1 flex flex-col gap-[3px]">
-                              {dayData.hours.map((intensity: string, hourIndex: number) => {
+                            <div key={dayIndex} className="flex gap-[2px] flex-1">
+                              {/* Show only hours 9am-5pm (indices 0-8) for abbreviated view */}
+                              {dayData.hours.slice(0, 9).map((intensity: string, hourIndex: number) => {
                                 const intensityColor = getIntensityColor(intensity);
                                 return (
                                   <div
                                     key={hourIndex}
-                                    className={`flex-1 ${intensityColor} rounded-[2px] transition-all duration-200 hover:brightness-110 cursor-pointer`}
+                                    className={`flex-1 ${intensityColor} rounded-[1px] transition-all duration-200 hover:brightness-110 cursor-pointer`}
                                   />
                                 );
                               })}
@@ -892,13 +949,13 @@ export default function InsightCard() {
                   <>
                     {currentMetric === 'Peak sales hours' ? (
                       <>
-                        {['9am', '10am', '11am', '12pm', '1pm', '2pm', '3pm', '4pm', '5pm'].map((hour, index) => (
+                        {['9am', '10am', '11am', '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm'].map((hour, index) => (
                           <div
                             key={index}
                             className="flex-1 text-center opacity-0 animate-[fadeIn_300ms_ease-in-out_forwards]"
                             style={{ animationDelay: `${index * 50}ms` }}
                           >
-                            {hour}
+                            {index === 0 || index === 3 || index === 6 || index === 9 || index === 13 ? hour : ''}
                           </div>
                         ))}
                       </>
@@ -920,10 +977,11 @@ export default function InsightCard() {
                   <>
                     {currentBusinessType === 'retailers' ? (
                       <>
-                        <div className="flex-1 text-center transition-opacity duration-300">Thu</div>
-                        <div className="flex-1 text-center transition-opacity duration-300">Fri</div>
-                        <div className="flex-1 text-center transition-opacity duration-300">Sat</div>
-                        <div className="flex-1 text-center transition-opacity duration-300">Sun</div>
+                        {['9am', '10am', '11am', '12pm', '1pm', '2pm', '3pm', '4pm', '5pm'].map((hour, index) => (
+                          <div key={index} className="flex-1 text-center transition-opacity duration-300">
+                            {index === 0 || index === 4 || index === 8 ? hour : ''}
+                          </div>
+                        ))}
                       </>
                     ) : (
                       <>
