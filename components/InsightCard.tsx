@@ -542,8 +542,35 @@ export default function InsightCard() {
     }
   }, [isLocationDropdownOpen]);
 
+  const handleStartOver = () => {
+    setIsExpanded(false);
+    setHideRightPanel(false);
+    setMapRevealed(false);
+    setShowCTA(false);
+    setScrollY(0);
+    setCurrentIndex(0);
+    setSelectedMetric(0);
+    setLocationInput('');
+    setIsDropdownOpen(false);
+    setIsChartDropdownOpen(false);
+    setIsLocationDropdownOpen(false);
+  };
+
   return (
     <div ref={containerRef} className="relative w-full h-full bg-white overflow-hidden">
+      {/* Start Over button - upper left corner */}
+      {isExpanded && (
+        <button
+          onClick={handleStartOver}
+          className="absolute top-8 left-8 z-50 bg-white border border-[#d3d3d3] rounded-full px-6 py-3 flex items-center gap-2 hover:bg-gray-50 transition-colors shadow-sm"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 2L4 8l6 6" />
+          </svg>
+          <span className="font-medium text-sm text-[rgba(0,0,0,0.9)]">Start over</span>
+        </button>
+      )}
+
       {/* Coffee shop image - always full width */}
       <div className="absolute left-0 top-0 w-full h-full overflow-hidden">
         <img
@@ -571,10 +598,10 @@ export default function InsightCard() {
 
       {/* Chart Card Overlay */}
       <div
-        className={`absolute top-1/2 -translate-y-1/2 bg-white rounded-[10px] shadow-lg flex flex-col transition-all duration-700 ${
+        className={`absolute bg-white rounded-[10px] shadow-lg flex flex-col transition-all duration-700 ${
           hideRightPanel
-            ? 'left-1/2 -translate-x-1/2 w-[591px] p-10 gap-10'
-            : 'left-[25%] -translate-x-1/2 w-[360px] p-5 gap-[30px]'
+            ? 'left-1/2 -translate-x-1/2 w-[591px] p-10 gap-10 top-[80px]'
+            : 'left-[25%] -translate-x-1/2 w-[360px] p-5 gap-[30px] top-1/2 -translate-y-1/2'
         }`}
       >
         {/* Dropdowns - Metric and Location */}
@@ -614,20 +641,6 @@ export default function InsightCard() {
               </div>
             )}
           </div>
-
-          {/* Location matters CTA button - appears when showCTA is true */}
-          {isExpanded && showCTA && !mapRevealed && (
-            <div className="flex-1">
-              <button
-                onClick={handleRevealMap}
-                className="w-full bg-black text-white rounded-[30px] h-[56px] flex items-center justify-center px-5 py-[10px] hover:bg-gray-800 transition-colors font-medium text-base animate-[popIn_800ms_ease-in-out_forwards]"
-              >
-                <span className="opacity-0 animate-[fadeIn_200ms_ease-in-out_800ms_forwards]">
-                  ... and location matters
-                </span>
-              </button>
-            </div>
-          )}
 
           {/* Location input field - only appears when map is revealed */}
           {isExpanded && mapRevealed && (
@@ -966,21 +979,52 @@ export default function InsightCard() {
               </p>
             </div>
 
-            {/* Get Personalized Insights CTA */}
-            <button
-              onClick={() => {
-                setFormData({ ...formData, businessType: currentBusinessType });
-                setShowModal(true);
-              }}
-              className="w-full bg-black text-white rounded-[30px] h-[56px] flex items-center justify-center px-5 py-[10px] hover:bg-gray-800 transition-colors font-medium text-base"
-            >
-              Get personalized insights for my business
-            </button>
+            {/* Get Personalized Insights CTA - Only show after map is revealed */}
+            {mapRevealed && (
+              <button
+                onClick={() => {
+                  setFormData({ ...formData, businessType: currentBusinessType });
+                  setShowModal(true);
+                }}
+                className="w-full bg-black text-white rounded-[30px] h-[56px] flex items-center justify-center px-5 py-[10px] hover:bg-gray-800 transition-colors font-medium text-base"
+              >
+                Get personalized insights for my business
+              </button>
+            )}
           </div>
         )}
       </div>
 
+      {/* Neighborhood Card - appears below main chart when expanded and CTA is shown */}
+      {isExpanded && showCTA && !mapRevealed && (
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-[80px] w-[591px] bg-white rounded-[10px] shadow-lg p-10 flex flex-col gap-6 animate-[fadeIn_500ms_ease-in-out_forwards]">
+          <p className="text-xs font-medium tracking-[0.96px] uppercase text-[#666666]">
+            IN YOUR NEIGHBORHOOD
+          </p>
 
+          <div className="flex items-center gap-4">
+            <input
+              type="text"
+              value={locationInput}
+              onChange={(e) => setLocationInput(e.target.value)}
+              placeholder="Mission"
+              className="flex-1 text-[48px] font-serif leading-[1.2] tracking-[-0.96px] text-[#d3d3d3] placeholder:text-[#d3d3d3] focus:text-black focus:outline-none border-b-2 border-[#d3d3d3] focus:border-black transition-colors pb-2"
+            />
+            <button
+              onClick={handleRevealMap}
+              className="w-[56px] h-[56px] bg-black rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors flex-shrink-0"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 10h10M10 5l5 5-5 5" />
+              </svg>
+            </button>
+          </div>
+
+          <p className="text-[18px] leading-[1.5] tracking-[-0.36px] text-[#101010]">
+            The numbers look different on a local level. See how your neighborhood insights compare to national averages.
+          </p>
+        </div>
+      )}
 
       {/* Content Card - Right Side */}
       <div className={`absolute top-0 w-[50%] h-full bg-white overflow-hidden flex items-center justify-center transition-all duration-700 ${
