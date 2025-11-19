@@ -83,6 +83,11 @@ body {
   animation: fade-in 0.6s ease-out;
 }
 
+.animate-fade-in-up {
+  animation: fade-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
