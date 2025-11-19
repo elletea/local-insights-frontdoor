@@ -337,6 +337,13 @@ export default function InsightCard() {
   const [locationInput, setLocationInput] = useState('');
   const [showCTA, setShowCTA] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [isEditingLocation, setIsEditingLocation] = useState(false);
+  const [editableLocation, setEditableLocation] = useState('Greenpoint, NYC');
+  const [tempLocation, setTempLocation] = useState('Greenpoint, NYC');
+  const [showConversionForm, setShowConversionForm] = useState(false);
+  const [selectedBusinessType, setSelectedBusinessType] = useState('');
+  const [isBusinessTypeDropdownOpen, setIsBusinessTypeDropdownOpen] = useState(false);
+  const [flowersScrollY, setFlowersScrollY] = useState(0);
   const [formData, setFormData] = useState({
     zipCode: '',
     email: '',
@@ -515,8 +522,8 @@ export default function InsightCard() {
         // Scrolling down - reveal map
         handleRevealMapScroll();
       } else if (mapRevealed && e.deltaY < 0) {
-        // Scrolling up - hide map
-        handleHideMapScroll();
+        // Scrolling up - animate flowers background and show conversion form
+        handleShowConversionForm();
       }
     };
 
@@ -544,11 +551,41 @@ export default function InsightCard() {
     }
   }, [isLocationDropdownOpen]);
 
+  const handleShowConversionForm = () => {
+    // Animate the flowers background scrolling up
+    let startTime: number | null = null;
+    const duration = 1200; // 1.2 second animation for better visibility
+
+    const animateFlowersScroll = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Ease-out cubic for smooth deceleration
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+      setFlowersScrollY(easeProgress * 800); // Animate from 0 to 800
+
+      if (progress < 1) {
+        requestAnimationFrame(animateFlowersScroll);
+      } else {
+        // Show the form after animation completes with a small delay
+        setTimeout(() => {
+          setShowConversionForm(true);
+        }, 200);
+      }
+    };
+
+    requestAnimationFrame(animateFlowersScroll);
+  };
+
   const handleStartOver = () => {
     setIsExpanded(false);
     setHideRightPanel(false);
     setMapRevealed(false);
     setShowCTA(false);
+    setShowConversionForm(false);
+    setFlowersScrollY(0);
     setScrollY(0);
     setCurrentIndex(0);
     // Reset metric based on business type - retailers default to Peak sales hours (1), others to Average order value (0)
@@ -566,11 +603,25 @@ export default function InsightCard() {
           onClick={handleStartOver}
           className="absolute top-8 left-8 z-50 bg-white border border-[#d3d3d3] rounded-full px-6 py-3 flex items-center gap-2 hover:bg-gray-50 transition-colors shadow-sm"
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M10 2L4 8l6 6" />
           </svg>
           <span className="font-medium text-sm text-[rgba(0,0,0,0.9)]">Start over</span>
         </button>
+      )}
+
+      {/* Flowers background - scrolls up from bottom */}
+      {isExpanded && flowersScrollY > 0 && (
+        <div className="absolute left-0 top-0 w-full h-full overflow-hidden z-10">
+          <img
+            src="/flowers-background.png"
+            alt="Background"
+            className="absolute w-full h-full object-cover"
+            style={{
+              transform: `translateY(${100 - Math.min(100, (flowersScrollY / 800) * 100)}%)`,
+            }}
+          />
+        </div>
       )}
 
       {/* Coffee shop image - always full width */}
@@ -586,9 +637,9 @@ export default function InsightCard() {
 
       {/* Map that slides up from bottom on scroll - only when expanded and revealed */}
       {isExpanded && mapRevealed && (
-        <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden">
+        <div className="absolute right-0 top-0 w-1/2 h-full overflow-hidden z-10">
           <img
-            src="/map-streets.png"
+            src="/map-neighborhood.png"
             alt="Interactive neighborhood map"
             className="absolute w-full h-full object-cover transition-transform duration-300 ease-out"
             style={{
@@ -600,93 +651,186 @@ export default function InsightCard() {
 
       {/* Chart Card Overlay */}
       <div
-        className={`absolute bg-white rounded-[10px] shadow-lg flex flex-col transition-all duration-700 ${
+        onClick={() => {
+          if (isExpanded && !mapRevealed) {
+            handleRevealMap();
+          }
+        }}
+        className={`absolute bg-white rounded-[10px] flex flex-col transition-all duration-700 ${
           hideRightPanel
-            ? 'left-1/2 -translate-x-1/2 w-[591px] p-10 gap-10 top-[80px]'
-            : 'left-[25%] -translate-x-1/2 w-[360px] p-5 gap-[30px] top-1/2 -translate-y-1/2'
-        }`}
+            ? 'left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[591px] p-10 gap-10 shadow-[0px_4px_8px_0px_rgba(0,0,0,0.1),0px_2px_16px_0px_rgba(0,0,0,0.1)] z-20'
+            : 'left-[25%] -translate-x-1/2 w-[360px] p-5 gap-[30px] top-1/2 -translate-y-1/2 shadow-lg'
+        } ${isExpanded && !mapRevealed ? 'cursor-pointer' : ''}`}
       >
-        {/* Dropdowns - Metric and Location */}
-        <div className="flex gap-5 w-full">
-          <div className="relative flex-1">
-            <button
-              onClick={() => {
-                setIsChartDropdownOpen(!isChartDropdownOpen);
-                setIsLocationDropdownOpen(false);
-              }}
-              className="w-full bg-white border border-[#d3d3d3] rounded-[30px] h-[56px] flex items-center justify-center px-5 py-[10px] hover:bg-gray-50 transition-colors"
-            >
-              <span className="font-medium text-base text-[rgba(0,0,0,0.9)]">
-                {metrics[selectedMetric]}
-              </span>
-            </button>
-
-            {/* Metric Dropdown Menu */}
-            {isChartDropdownOpen && (
-              <div className="absolute top-full mt-2 left-0 right-0 bg-white border border-[#d3d3d3] rounded-2xl shadow-lg overflow-hidden z-30">
-                {metrics.map((metric, index) => (
-                  <button
-                    key={metric}
-                    onClick={() => {
-                      setSelectedMetric(index);
-                      setIsChartDropdownOpen(false);
-                    }}
-                    className={`w-full px-5 py-3 text-left font-medium text-base hover:bg-gray-50 transition-colors ${
-                      selectedMetric === index
-                        ? 'bg-gray-100 text-black'
-                        : 'text-[rgba(0,0,0,0.9)]'
+        {/* Metric dropdown - only in expanded view, shown as eyebrow */}
+        {isExpanded && (
+          <>
+            <div className="flex items-start justify-between w-full">
+              <div className="relative flex items-center gap-[10px]">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsChartDropdownOpen(!isChartDropdownOpen);
+                    setIsLocationDropdownOpen(false);
+                  }}
+                  className="flex items-center gap-[10px] hover:opacity-70 transition-opacity"
+                >
+                  <span className="font-medium text-xs uppercase tracking-[1.08px] text-black">
+                    {metrics[selectedMetric]}
+                  </span>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    className={`transition-transform duration-200 ${
+                      isChartDropdownOpen ? 'rotate-180' : ''
                     }`}
                   >
-                    {metric}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+                    <path
+                      d="M13.5 5.5L8 11L2.5 5.5"
+                      stroke="#101010"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
 
-          {/* Location input field - only appears when map is revealed */}
-          {isExpanded && mapRevealed && (
-            <div ref={locationInputRef} className="relative flex-1 animate-[fadeIn_500ms_ease-in-out_forwards]">
-              <input
-                type="text"
-                value={locationInput}
-                onChange={(e) => {
-                  setLocationInput(e.target.value);
-                  setIsLocationDropdownOpen(true);
-                  setIsChartDropdownOpen(false);
-                }}
-                onFocus={() => {
-                  setIsLocationDropdownOpen(true);
-                  setIsChartDropdownOpen(false);
-                }}
-                placeholder="Enter location..."
-                className="w-full bg-white border border-[#d3d3d3] rounded-[30px] h-[56px] px-5 py-[10px] font-medium text-base text-[rgba(0,0,0,0.9)] focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-10 transition-all"
-              />
-
-              {/* Location Suggestions Dropdown */}
-              {isLocationDropdownOpen && locationInput.trim() !== '' && (
-                <div className="absolute top-full mt-2 left-0 right-0 bg-white border border-[#d3d3d3] rounded-2xl shadow-lg overflow-hidden z-30">
-                  {locations
-                    .filter((location) =>
-                      location.toLowerCase().includes(locationInput.toLowerCase())
-                    )
-                    .map((location, index) => (
+                {/* Metric Dropdown Menu */}
+                {isChartDropdownOpen && (
+                  <div className="absolute top-full mt-2 left-0 bg-white border border-[#d3d3d3] rounded-2xl shadow-lg overflow-hidden z-30">
+                    {metrics.map((metric, index) => (
                       <button
-                        key={location}
+                        key={metric}
                         onClick={() => {
-                          setLocationInput(location);
-                          setIsLocationDropdownOpen(false);
+                          setSelectedMetric(index);
+                          setIsChartDropdownOpen(false);
                         }}
-                        className="w-full px-5 py-3 text-left font-medium text-base hover:bg-gray-50 transition-colors text-[rgba(0,0,0,0.9)]"
+                        className={`w-full px-5 py-3 text-left font-medium text-base hover:bg-gray-50 transition-colors whitespace-nowrap ${
+                          selectedMetric === index
+                            ? 'bg-gray-100 text-black'
+                            : 'text-[rgba(0,0,0,0.9)]'
+                        }`}
                       >
-                        {location}
+                        {metric}
                       </button>
                     ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Location indicator - only when map is revealed */}
+              {mapRevealed && (
+                <div className="flex items-center gap-[10px]">
+                  {isEditingLocation ? (
+                    <input
+                      type="text"
+                      value={tempLocation}
+                      onChange={(e) => setTempLocation(e.target.value)}
+                      onBlur={() => {
+                        setEditableLocation(tempLocation);
+                        setIsEditingLocation(false);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          setEditableLocation(tempLocation);
+                          setIsEditingLocation(false);
+                        }
+                      }}
+                      autoFocus
+                      className="font-medium text-xs uppercase tracking-[1.08px] text-black bg-transparent border-b border-black focus:outline-none min-w-[120px]"
+                    />
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTempLocation(editableLocation);
+                        setIsEditingLocation(true);
+                      }}
+                      className="font-medium text-xs uppercase tracking-[1.08px] text-black hover:opacity-70 transition-opacity"
+                    >
+                      {editableLocation}
+                    </button>
+                  )}
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M8 1.33334C5.42267 1.33334 3.33334 3.42267 3.33334 6.00001C3.33334 9.50001 8 14.6667 8 14.6667C8 14.6667 12.6667 9.50001 12.6667 6.00001C12.6667 3.42267 10.5773 1.33334 8 1.33334ZM8 7.66668C7.08 7.66668 6.33334 6.92001 6.33334 6.00001C6.33334 5.08001 7.08 4.33334 8 4.33334C8.92 4.33334 9.66667 5.08001 9.66667 6.00001C9.66667 6.92001 8.92 7.66668 8 7.66668Z"
+                      fill="black"
+                    />
+                  </svg>
                 </div>
               )}
             </div>
-          )}
-        </div>
+
+            {/* Insight Text */}
+            <div className="flex flex-col gap-[10px] w-full text-[#101010]">
+              <p className="font-serif text-[32px] leading-[1.1] tracking-[-0.64px]">
+                {currentMetric === 'Average order value' ? (
+                  currentBusinessType === 'retailers'
+                    ? (mapRevealed
+                        ? `In ${editableLocation.split(',')[0]}, weekend lunch hours drive the highest order values`
+                        : "Weekend shoppers consistently spend 28% more than weekday customers")
+                    : (mapRevealed
+                        ? `In ${editableLocation.split(',')[0]}, 7am hits peak order value at $24.20`
+                        : "Our data shows morning rush between 7-9am beats lunch by 31%")
+                ) : currentMetric === 'Peak sales hours' ? (
+                  currentBusinessType === 'retailers'
+                    ? (mapRevealed
+                        ? `In ${editableLocation.split(',')[0]}, Friday and Saturday afternoons see peak traffic`
+                        : "Weekend shopping drives 45% of weekly revenue in concentrated windows")
+                    : (mapRevealed
+                        ? `In ${editableLocation.split(',')[0]}, Thursday and Friday mornings are busiest`
+                        : "Weekday mornings between 7-9am see the highest customer volume")
+                ) : (
+                  currentBusinessType === 'retailers'
+                    ? (mapRevealed
+                        ? `In ${editableLocation.split(',')[0]}, retailers see 21% year-over-year growth`
+                        : "Spring and early summer months show the strongest growth trends")
+                    : (mapRevealed
+                        ? `In ${editableLocation.split(',')[0]}, coffee shops average 18% growth in Q2`
+                        : "Early spring shows 22% higher growth compared to winter months")
+                )}
+              </p>
+              <p className="font-normal text-base leading-[1.5]">
+                {currentMetric === 'Average order value' ? (
+                  currentBusinessType === 'retailers'
+                    ? (mapRevealed
+                        ? "Saturday 12pm-2pm shows the highest concentration of premium purchases."
+                        : "Friday and Saturday between 11am-3pm consistently outperform other periods.")
+                    : (mapRevealed
+                        ? "That's 31% higher than the city-wide average of $18.50."
+                        : "The average order value jumps from $18.50 to $24.20.")
+                ) : currentMetric === 'Peak sales hours' ? (
+                  currentBusinessType === 'retailers'
+                    ? (mapRevealed
+                        ? "Friday 10am-2pm and Saturday 11am-3pm show the densest traffic patterns."
+                        : "Thursday-Saturday 10am-2pm consistently outperform all other time windows.")
+                    : (mapRevealed
+                        ? "Thursday and Friday 7-9am account for 35% of weekly morning revenue."
+                        : "These hours generate 40% more transactions than afternoon periods.")
+                ) : (
+                  currentBusinessType === 'retailers'
+                    ? (mapRevealed
+                        ? "March through June drives the majority of annual growth acceleration."
+                        : "Q2 growth rates are 45% higher than Q4 holiday-adjusted numbers.")
+                    : (mapRevealed
+                        ? "March and April show the steepest growth curves for local coffee shops."
+                        : "The spring surge begins in March and peaks in late April.")
+                )}
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* Metric eyebrow - Only in collapsed view */}
+        {!isExpanded && (
+          <div className="flex items-start justify-start w-full">
+            <span className="font-medium text-xs uppercase tracking-[1.08px] text-black">
+              {metrics[selectedMetric]}
+            </span>
+          </div>
+        )}
 
         {/* Chart */}
         <div className="flex flex-col gap-[40px] w-full">
@@ -989,77 +1133,310 @@ export default function InsightCard() {
             </div>
           </div>
         </div>
-
-        {/* Insight Text - Only visible when expanded */}
-        {isExpanded && (
-          <div className="flex flex-col gap-[20px] w-full text-[#101010]">
-            <div className="flex flex-col gap-[10px]">
-              <p className="font-serif text-[24px] leading-[1.2] tracking-[-0.48px]">
-                {currentBusinessType === 'retailers'
-                  ? (mapRevealed
-                      ? "In San Francisco, Friday midday sees the most consistent high traffic"
-                      : "While weekends see traffic, weekday lunch hours show sustained peak sales")
-                  : (mapRevealed
-                      ? "In San Francisco, 7am hits peak order value at $24.20"
-                      : "Our data shows morning rush between 7-9am beats lunch by 31%")
-                }
-              </p>
-              <p className="font-normal text-[18px] leading-[1.5] tracking-[-0.36px]">
-                {currentBusinessType === 'retailers'
-                  ? (mapRevealed
-                      ? "Thursday through Saturday, 10am-2pm shows the densest concentration of high-traffic periods."
-                      : "Thursday-Friday 10am-2pm consistently outperform weekend shopping windows.")
-                  : (mapRevealed
-                      ? "That's 31% higher than the city-wide average of $18.50."
-                      : "Average order value jumps from $18.50 to 24.20 during these hours.")
-                }
-              </p>
-            </div>
-
-            {/* Get Personalized Insights CTA - Only show after map is revealed */}
-            {mapRevealed && (
-              <button
-                onClick={() => {
-                  setFormData({ ...formData, businessType: currentBusinessType });
-                  setShowModal(true);
-                }}
-                className="w-full bg-black text-white rounded-[30px] h-[56px] flex items-center justify-center px-5 py-[10px] hover:bg-gray-800 transition-colors font-medium text-base"
-              >
-                Get personalized insights for my business
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Neighborhood Card - appears below main chart when expanded and CTA is shown */}
-      {isExpanded && showCTA && !mapRevealed && (
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-[80px] w-[591px] bg-white rounded-[10px] shadow-lg p-10 flex flex-col gap-6 animate-[fadeIn_500ms_ease-in-out_forwards]">
-          <p className="text-xs font-medium tracking-[0.96px] uppercase text-[#666666]">
-            IN YOUR NEIGHBORHOOD
-          </p>
-
-          <div className="flex items-center gap-4">
-            <input
-              type="text"
-              value={locationInput}
-              onChange={(e) => setLocationInput(e.target.value)}
-              placeholder="Mission"
-              className="flex-1 text-[48px] font-serif leading-[1.2] tracking-[-0.96px] text-[#d3d3d3] placeholder:text-[#d3d3d3] focus:text-black focus:outline-none border-b-2 border-[#d3d3d3] focus:border-black transition-colors pb-2"
-            />
-            <button
-              onClick={handleRevealMap}
-              className="w-[56px] h-[56px] bg-black rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors flex-shrink-0"
-            >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 10h10M10 5l5 5-5 5" />
-              </svg>
-            </button>
+      {/* Neighborhood Insights Card */}
+      {showConversionForm && (
+        <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-30 bg-white rounded-[10px] w-[591px] p-10 shadow-[0px_4px_8px_0px_rgba(0,0,0,0.1),0px_2px_16px_0px_rgba(0,0,0,0.1)] flex flex-col gap-10">
+          {/* Heading */}
+          <div className="flex flex-col gap-[10px]">
+            <h2 className="font-serif text-[32px] leading-[1.1] tracking-[-0.64px] text-[#101010]">
+              See your neighborhood insights
+            </h2>
           </div>
 
-          <p className="text-[18px] leading-[1.5] tracking-[-0.36px] text-[#101010]">
-            The numbers look different on a local level. See how your neighborhood insights compare to national averages.
-          </p>
+          {/* Business Type Dropdown */}
+          <div className="relative w-full">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsBusinessTypeDropdownOpen(!isBusinessTypeDropdownOpen);
+              }}
+              className="w-full border border-[#959595] rounded-[100px] h-[64px] px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            >
+              <span className="font-serif text-[32px] leading-[1.1] tracking-[-0.64px] text-[#666666]">
+                {selectedBusinessType || 'Bakery'}
+              </span>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                className={`transition-transform duration-200 ${
+                  isBusinessTypeDropdownOpen ? 'rotate-180' : ''
+                }`}
+              >
+                <path
+                  d="M13.5 5.5L8 11L2.5 5.5"
+                  stroke="#959595"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            {/* Business Type Dropdown Menu */}
+            {isBusinessTypeDropdownOpen && (
+              <div className="absolute top-full mt-2 left-0 right-0 bg-white border border-[#d3d3d3] rounded-2xl shadow-lg overflow-hidden z-30">
+                {['Bakery', 'Coffee shop', 'Restaurant', 'Retail store', 'Bar'].map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => {
+                      setSelectedBusinessType(type);
+                      setIsBusinessTypeDropdownOpen(false);
+                    }}
+                    className={`w-full px-5 py-3 text-left font-medium text-base hover:bg-gray-50 transition-colors ${
+                      selectedBusinessType === type
+                        ? 'bg-gray-100 text-black'
+                        : 'text-[rgba(0,0,0,0.9)]'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Metric and Location Row */}
+          <div className="flex items-center justify-between w-full">
+            <div className="relative flex items-center gap-[10px]">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsChartDropdownOpen(!isChartDropdownOpen);
+                  setIsLocationDropdownOpen(false);
+                }}
+                className="flex items-center gap-[10px] hover:opacity-70 transition-opacity"
+              >
+                <span className="font-medium text-xs uppercase tracking-[1.08px] text-black">
+                  {metrics[selectedMetric]}
+                </span>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  className={`transition-transform duration-200 ${
+                    isChartDropdownOpen ? 'rotate-180' : ''
+                  }`}
+                >
+                  <path
+                    d="M13.5 5.5L8 11L2.5 5.5"
+                    stroke="#101010"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+
+              {/* Metric Dropdown Menu */}
+              {isChartDropdownOpen && (
+                <div className="absolute top-full mt-2 left-0 bg-white border border-[#d3d3d3] rounded-2xl shadow-lg overflow-hidden z-40">
+                  {metrics.map((metric, index) => (
+                    <button
+                      key={metric}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedMetric(index);
+                        setIsChartDropdownOpen(false);
+                      }}
+                      className={`w-full px-5 py-3 text-left font-medium text-base hover:bg-gray-50 transition-colors whitespace-nowrap ${
+                        selectedMetric === index
+                          ? 'bg-gray-100 text-black'
+                          : 'text-[rgba(0,0,0,0.9)]'
+                      }`}
+                    >
+                      {metric}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-[10px]">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setTempLocation(editableLocation);
+                  setIsEditingLocation(true);
+                }}
+                className="font-medium text-xs uppercase tracking-[1.08px] text-black hover:opacity-70 transition-opacity"
+              >
+                {editableLocation}
+              </button>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M8 1.33334C5.42267 1.33334 3.33334 3.42267 3.33334 6.00001C3.33334 9.50001 8 14.6667 8 14.6667C8 14.6667 12.6667 9.50001 12.6667 6.00001C12.6667 3.42267 10.5773 1.33334 8 1.33334ZM8 7.66668C7.08 7.66668 6.33334 6.92001 6.33334 6.00001C6.33334 5.08001 7.08 4.33334 8 4.33334C8.92 4.33334 9.66667 5.08001 9.66667 6.00001C9.66667 6.92001 8.92 7.66668 8 7.66668Z"
+                  fill="black"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* Chart */}
+          <div className="flex flex-col gap-[40px] w-full">
+            <div className="flex gap-[10px] h-[320px]">
+              {/* Y Axis Labels */}
+              <div className="flex flex-col justify-between pb-[25px] text-xs text-[#666666] tracking-[0.12px]">
+                {currentMetric === 'Peak sales hours' ? (
+                  <>
+                    <span>Mon</span>
+                    <span>Tue</span>
+                    <span>Wed</span>
+                    <span>Thu</span>
+                    <span>Fri</span>
+                    <span>Sat</span>
+                    <span>Sun</span>
+                  </>
+                ) : currentMetric === 'Sales growth' ? (
+                  <>
+                    <span>20%</span>
+                    <span>15%</span>
+                    <span>10%</span>
+                    <span>5%</span>
+                    <span>0%</span>
+                  </>
+                ) : (
+                  <>
+                    <span>$20</span>
+                    <span>$15</span>
+                    <span>$10</span>
+                    <span>$5</span>
+                    <span>0</span>
+                  </>
+                )}
+              </div>
+
+              {/* Chart Area */}
+              <div className="flex-1 flex flex-col gap-[10px] relative">
+                {/* Grid Lines */}
+                <div className="absolute left-[3px] right-0 top-0 bottom-[24px] flex flex-col justify-between z-0">
+                  {currentMetric === 'Peak sales hours' ? (
+                    <>
+                      {[...Array(8)].map((_, i) => (
+                        <div key={i} className="w-full h-[1px] bg-[#f0f0f0]" />
+                      ))}
+                    </>
+                  ) : (
+                    <>
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="w-full h-[1px] bg-[#f0f0f0]" />
+                      ))}
+                    </>
+                  )}
+                </div>
+
+                {/* Bars/Chart Content */}
+                <div className="flex gap-[12px] items-end justify-end h-[295px] px-[10px] pb-px relative z-10">
+                  {currentMetric === 'Peak sales hours' ? (
+                    <div className="w-full h-full flex flex-col gap-[2px]">
+                      {/* Heatmap grid visualization for Peak sales hours */}
+                      {dataToDisplay.map((dayData: any, dayIndex: number) => (
+                        <div key={dayIndex} className="flex gap-[2px] flex-1">
+                          {dayData.hours.map((intensity: string, hourIndex: number) => {
+                            const intensityColor = getIntensityColor(intensity);
+                            return (
+                              <div
+                                key={hourIndex}
+                                className={`flex-1 ${intensityColor} rounded-[1px] transition-all duration-300 hover:brightness-110 cursor-pointer`}
+                              />
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                  ) : currentMetric === 'Sales growth' ? (
+                    <div className="w-full h-full relative">
+                      {/* Line graph for Sales growth */}
+                      <svg className="w-full h-full" viewBox="-8 -8 516 310" preserveAspectRatio="none">
+                        {/* Generate line path */}
+                        <path
+                          d={dataToDisplay.map((item: any, index: number) => {
+                            const x = (index / (dataToDisplay.length - 1)) * 500;
+                            const y = 294 - item.height;
+                            return `${index === 0 ? 'M' : 'L'} ${x},${y}`;
+                          }).join(' ')}
+                          fill="none"
+                          stroke="black"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        {/* Data points with hover states */}
+                        {dataToDisplay.map((item: any, index: number) => {
+                          const x = (index / (dataToDisplay.length - 1)) * 500;
+                          const y = 294 - item.height;
+                          return (
+                            <g key={index} className="group cursor-pointer">
+                              {/* Invisible larger hover area */}
+                              <circle cx={x} cy={y} r="12" fill="transparent" className="cursor-pointer" />
+                              {/* Outer ring on hover */}
+                              <circle
+                                cx={x} cy={y} r="7"
+                                fill="none" stroke="black" strokeWidth="1.5"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+                              />
+                              {/* Main dot */}
+                              <circle cx={x} cy={y} r="4" fill="black" className="transition-all duration-200 pointer-events-none" />
+                            </g>
+                          );
+                        })}
+                      </svg>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Bar chart for Average order value */}
+                      {dataToDisplay.map((item: any, index: number) => {
+                        const barColor = getBarColor(index, dataToDisplay);
+                        const hoverClass = getHoverBrightness(barColor);
+                        const displayValue = `$${item.value}`;
+
+                        return (
+                          <div
+                            key={index}
+                            className="flex-1 flex flex-col justify-end h-[294px] group relative"
+                          >
+                            <div className={`w-full ${barColor} rounded-t-[6px] transition-all duration-500 ${hoverClass} cursor-pointer`} style={{ height: `${item.height}px` }} />
+                            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                              {displayValue}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </>
+                  )}
+                </div>
+
+                {/* X Axis Labels */}
+                <div className="flex gap-[12px] items-start justify-start px-[10px] text-xs text-[#666666] tracking-[0.12px]">
+                  {currentMetric === 'Peak sales hours' ? (
+                    <>
+                      {['9am', '10am', '11am', '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm'].map((hour, index) => (
+                        <div key={index} className="flex-1 text-center">
+                          {index === 0 || index === 3 || index === 6 || index === 9 || index === 13 ? hour : ''}
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    <>
+                      {dataToDisplay.map((item: any, index: number) => (
+                        <div key={index} className="flex-1 text-center">
+                          {item.time}
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA Button */}
+          <button className="w-full bg-black text-white rounded-[30px] h-[56px] flex items-center justify-center px-5 py-3 hover:bg-gray-800 transition-colors font-medium text-base">
+            Get my insights
+          </button>
         </div>
       )}
 
