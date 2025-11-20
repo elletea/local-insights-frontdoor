@@ -2,22 +2,22 @@
 
 import { useState, useRef } from 'react';
 
-const businessTypes = ['coffee shops', 'retailers', 'salons', 'services'];
+const businessTypes = ['coffee shops', 'clothing stores', 'beauty salons', 'contractors'];
 
 // Different images for each business type
 const businessImages = [
   '/coffee-machine.png', // coffee shops
-  '/plants.jpg', // retailers
-  '/salon-tools.jpg', // salons
-  '/services-desk.jpg', // services
+  '/clothing-store.jpg', // clothing stores
+  '/salon-tools.jpg', // beauty salons
+  '/services-desk.jpg', // contractors
 ];
 
 // Different insights for each business type
 const insights = [
   'lunch hour drives the highest order value.',
-  'weekend shopping generates peak sales.',
+  'weekday afternoons see the highest foot traffic.',
   'Friday appointments command premium pricing.',
-  'appointment scheduling drives consistent revenue.',
+  'weekday mornings generate the most revenue.',
 ];
 
 // Metrics for the chart dropdown
@@ -98,6 +98,14 @@ export default function InsightCard() {
     setTimeout(() => {
       setCurrentIndex(index);
       setIsAnimating(false);
+      // Set default metric based on business type
+      if (index === 1) {
+        // Clothing stores - default to Peak sales hours
+        setSelectedMetric(1);
+      } else {
+        // Other business types - default to Average order value
+        setSelectedMetric(0);
+      }
     }, 400);
   };
 
@@ -230,12 +238,12 @@ export default function InsightCard() {
         {/* Initial View Section */}
         <div className="w-full min-h-screen flex items-center justify-center snap-start">
           <div className="w-[589px] flex flex-col items-center gap-16">
-            {/* Abbreviated Chart - 4 bars */}
+            {/* Abbreviated Chart - 4 bars or heatmap for clothing stores */}
             <div className="bg-white rounded-[10px] w-[360px] p-5 shadow-lg flex flex-col gap-[20px]">
               {/* Metric eyebrow */}
               <div className="flex items-start justify-start w-full">
                 <span className="font-medium text-xs uppercase tracking-[1.08px] text-black">
-                  {metrics[selectedMetric]}
+                  {currentIndex === 1 ? 'Peak sales hours' : metrics[selectedMetric]}
                 </span>
               </div>
 
@@ -243,48 +251,109 @@ export default function InsightCard() {
               <div className="flex gap-[10px] h-[320px]">
                 {/* Y Axis Labels */}
                 <div className="flex flex-col justify-between pb-[25px] text-xs text-[#666666] tracking-[0.12px]">
-                  <span>$20</span>
-                  <span>$15</span>
-                  <span>$10</span>
-                  <span>$5</span>
-                  <span>0</span>
+                  {currentIndex === 1 ? (
+                    // Peak sales hours - days of week
+                    <>
+                      <span>Mon</span>
+                      <span>Tue</span>
+                      <span>Wed</span>
+                      <span>Thu</span>
+                      <span>Fri</span>
+                      <span>Sat</span>
+                      <span>Sun</span>
+                    </>
+                  ) : (
+                    // Average order value - dollars
+                    <>
+                      <span>$20</span>
+                      <span>$15</span>
+                      <span>$10</span>
+                      <span>$5</span>
+                      <span>0</span>
+                    </>
+                  )}
                 </div>
 
                 {/* Chart Area */}
                 <div className="flex-1 flex flex-col gap-[10px] relative">
                   {/* Grid Lines */}
                   <div className="absolute left-[3px] right-0 top-0 bottom-[24px] flex flex-col justify-between z-0">
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="w-full h-[1px] bg-[#f0f0f0]" />
-                    ))}
+                    {currentIndex === 1 ? (
+                      // Peak sales hours - 8 grid lines for 7 days
+                      [...Array(8)].map((_, i) => (
+                        <div key={i} className="w-full h-[1px] bg-[#f0f0f0]" />
+                      ))
+                    ) : (
+                      // Standard 5 grid lines
+                      [...Array(5)].map((_, i) => (
+                        <div key={i} className="w-full h-[1px] bg-[#f0f0f0]" />
+                      ))
+                    )}
                   </div>
 
-                  {/* Bars - Only 4 bars */}
-                  <div className="flex gap-[12px] items-end justify-end h-[295px] px-[10px] pb-px relative z-10">
-                    {[
-                      { height: 241, label: '11am' },
-                      { height: 223, label: '12pm' },
-                      { height: 219, label: '1pm' },
-                      { height: 273, label: '2pm' },
-                    ].map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex-1 flex flex-col justify-end h-[294px] transition-opacity duration-300 group relative"
-                      >
-                        <div
-                          className="w-full bg-black rounded-t-[6px] transition-all duration-200 group-hover:brightness-125 cursor-pointer"
-                          style={{ height: `${item.height}px` }}
-                        />
+                  {currentIndex === 1 ? (
+                    // Clothing stores - Show heatmap for peak sales hours (abbreviated to 4 hours)
+                    <div className="h-[295px] px-[10px] pb-px relative z-10">
+                      <div className="w-full h-full flex flex-col gap-[2px]">
+                        {peakSalesHoursData.map((dayData, dayIndex) => (
+                          <div key={dayIndex} className="flex gap-[2px] flex-1">
+                            {dayData.hours.slice(5, 9).map((intensity, hourIndex) => {
+                              const intensityColor = getIntensityColor(intensity);
+                              return (
+                                <div
+                                  key={hourIndex}
+                                  className={`flex-1 ${intensityColor} rounded-[1px] transition-all duration-300 hover:brightness-110 cursor-pointer`}
+                                />
+                              );
+                            })}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ) : (
+                    // Other business types - Show bars
+                    <>
+                      {/* Bars - Only 4 bars */}
+                      <div className="flex gap-[12px] items-end justify-end h-[295px] px-[10px] pb-px relative z-10">
+                        {[
+                          { height: 241, label: '11am' },
+                          { height: 223, label: '12pm' },
+                          { height: 219, label: '1pm' },
+                          { height: 273, label: '2pm' },
+                        ].map((item, index) => (
+                          <div
+                            key={index}
+                            className="flex-1 flex flex-col justify-end h-[294px] transition-opacity duration-300 group relative"
+                          >
+                            <div
+                              className="w-full bg-black rounded-t-[6px] transition-all duration-200 group-hover:brightness-125 cursor-pointer"
+                              style={{ height: `${item.height}px` }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
 
                   {/* X Axis Labels */}
                   <div className="flex gap-[12px] items-start justify-start px-[10px] text-xs text-[#666666] tracking-[0.12px]">
-                    <div className="flex-1 text-center transition-opacity duration-300">11am</div>
-                    <div className="flex-1 text-center transition-opacity duration-300">12pm</div>
-                    <div className="flex-1 text-center transition-opacity duration-300">1pm</div>
-                    <div className="flex-1 text-center transition-opacity duration-300">2pm</div>
+                    {currentIndex === 1 ? (
+                      // Peak sales hours - abbreviated hour labels
+                      <>
+                        <div className="flex-1 text-center transition-opacity duration-300">11am</div>
+                        <div className="flex-1 text-center transition-opacity duration-300">12pm</div>
+                        <div className="flex-1 text-center transition-opacity duration-300">1pm</div>
+                        <div className="flex-1 text-center transition-opacity duration-300">2pm</div>
+                      </>
+                    ) : (
+                      // Other metrics
+                      <>
+                        <div className="flex-1 text-center transition-opacity duration-300">11am</div>
+                        <div className="flex-1 text-center transition-opacity duration-300">12pm</div>
+                        <div className="flex-1 text-center transition-opacity duration-300">1pm</div>
+                        <div className="flex-1 text-center transition-opacity duration-300">2pm</div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -389,12 +458,27 @@ export default function InsightCard() {
 
                 {/* Insight Text */}
                 <div className="flex flex-col gap-[10px] w-full text-[#101010]">
-                  <p className="font-serif text-[28px] leading-[1.1] tracking-[-0.56px]">
-                    Our data shows morning rush between 7-9am beats lunch by 31%
-                  </p>
-                  <p className="font-normal text-sm leading-[1.5] text-[#666666]">
-                    The average order value jumps from $18.50 to $24.20.
-                  </p>
+                  {currentIndex === 1 ? (
+                    // Clothing stores insight
+                    <>
+                      <p className="font-serif text-[28px] leading-[1.1] tracking-[-0.56px]">
+                        Thursday and Friday afternoons drive 67% of weekly sales
+                      </p>
+                      <p className="font-normal text-sm leading-[1.5] text-[#666666]">
+                        Peak traffic occurs between 12pm-2pm on weekdays.
+                      </p>
+                    </>
+                  ) : (
+                    // Other business types insight
+                    <>
+                      <p className="font-serif text-[28px] leading-[1.1] tracking-[-0.56px]">
+                        Our data shows morning rush between 7-9am beats lunch by 31%
+                      </p>
+                      <p className="font-normal text-sm leading-[1.5] text-[#666666]">
+                        The average order value jumps from $18.50 to $24.20.
+                      </p>
+                    </>
+                  )}
                 </div>
 
                 {/* Chart */}
@@ -402,54 +486,109 @@ export default function InsightCard() {
                   <div className="flex gap-[10px] h-[240px]">
                     {/* Y Axis Labels */}
                     <div className="flex flex-col justify-between pb-[20px] text-xs text-[#666666] tracking-[0.12px]">
-                      <span>$25</span>
-                      <span>$20</span>
-                      <span>$15</span>
-                      <span>$10</span>
-                      <span>0</span>
+                      {currentIndex === 1 ? (
+                        // Peak sales hours - days of week
+                        <>
+                          <span>Mon</span>
+                          <span>Tue</span>
+                          <span>Wed</span>
+                          <span>Thu</span>
+                          <span>Fri</span>
+                          <span>Sat</span>
+                          <span>Sun</span>
+                        </>
+                      ) : (
+                        // Other metrics - dollar amounts
+                        <>
+                          <span>$25</span>
+                          <span>$20</span>
+                          <span>$15</span>
+                          <span>$10</span>
+                          <span>0</span>
+                        </>
+                      )}
                     </div>
 
                     {/* Chart Area */}
                     <div className="flex-1 flex flex-col gap-[10px] relative">
                       {/* Grid Lines */}
                       <div className="absolute left-[3px] right-0 top-0 bottom-[20px] flex flex-col justify-between z-0">
-                        {[...Array(5)].map((_, i) => (
-                          <div key={i} className="w-full h-[1px] bg-[#f0f0f0]" />
-                        ))}
+                        {currentIndex === 1 ? (
+                          // Peak sales hours - 8 grid lines for 7 days
+                          [...Array(8)].map((_, i) => (
+                            <div key={i} className="w-full h-[1px] bg-[#f0f0f0]" />
+                          ))
+                        ) : (
+                          // Standard 5 grid lines
+                          [...Array(5)].map((_, i) => (
+                            <div key={i} className="w-full h-[1px] bg-[#f0f0f0]" />
+                          ))
+                        )}
                       </div>
 
-                      {/* Bars - 9 bars */}
-                      <div className="flex gap-[8px] items-end justify-end h-[220px] px-[8px] pb-px relative z-10">
-                        {getCurrentChartData().map((item, index) => {
-                          const barColor = getBarColor(index);
-                          const hoverClass = getHoverBrightness(barColor);
-                          const displayValue = selectedMetric === 0 ? `$${item.value}` : selectedMetric === 1 ? `${item.value} txns` : `${item.value}%`;
-                          const scaledHeight = (item.height / 294) * 220;
-
-                          return (
-                            <div
-                              key={index}
-                              className="flex-1 flex flex-col justify-end h-full group relative"
-                            >
-                              <div
-                                className={`w-full ${barColor} rounded-t-[4px] transition-all duration-200 ${hoverClass} cursor-pointer`}
-                                style={{ height: `${scaledHeight}px` }}
-                              />
-                              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                                {displayValue}
+                      {currentIndex === 1 ? (
+                        // Clothing stores - Show full heatmap for peak sales hours
+                        <div className="h-[220px] px-[8px] pb-px relative z-10">
+                          <div className="w-full h-full flex flex-col gap-[2px]">
+                            {peakSalesHoursData.map((dayData, dayIndex) => (
+                              <div key={dayIndex} className="flex gap-[2px] flex-1">
+                                {dayData.hours.map((intensity, hourIndex) => {
+                                  const intensityColor = getIntensityColor(intensity);
+                                  return (
+                                    <div
+                                      key={hourIndex}
+                                      className={`flex-1 ${intensityColor} rounded-[1px] transition-all duration-300 hover:brightness-110 cursor-pointer`}
+                                    />
+                                  );
+                                })}
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        // Other business types - Show bars
+                        <div className="flex gap-[8px] items-end justify-end h-[220px] px-[8px] pb-px relative z-10">
+                          {getCurrentChartData().map((item, index) => {
+                            const barColor = getBarColor(index);
+                            const hoverClass = getHoverBrightness(barColor);
+                            const displayValue = selectedMetric === 0 ? `$${item.value}` : selectedMetric === 1 ? `${item.value} txns` : `${item.value}%`;
+                            const scaledHeight = (item.height / 294) * 220;
+
+                            return (
+                              <div
+                                key={index}
+                                className="flex-1 flex flex-col justify-end h-full group relative"
+                              >
+                                <div
+                                  className={`w-full ${barColor} rounded-t-[4px] transition-all duration-200 ${hoverClass} cursor-pointer`}
+                                  style={{ height: `${scaledHeight}px` }}
+                                />
+                                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                  {displayValue}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
 
                       {/* X Axis Labels */}
                       <div className="flex gap-[8px] items-start justify-start px-[8px] text-xs text-[#666666] tracking-[0.12px]">
-                        {getCurrentChartData().map((item, index) => (
-                          <div key={index} className="flex-1 text-center">
-                            {item.time}
-                          </div>
-                        ))}
+                        {currentIndex === 1 ? (
+                          // Peak sales hours - hour labels
+                          ['6am', '7am', '8am', '9am', '10am', '11am', '12pm', '1pm', '2pm'].map((hour, index) => (
+                            <div key={index} className="flex-1 text-center">
+                              {hour}
+                            </div>
+                          ))
+                        ) : (
+                          // Other metrics - use data time labels
+                          getCurrentChartData().map((item, index) => (
+                            <div key={index} className="flex-1 text-center">
+                              {item.time}
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
                   </div>
@@ -471,7 +610,7 @@ export default function InsightCard() {
           <div id="location-map-section" className="w-full min-h-screen flex flex-col items-center justify-center gap-16 snap-start relative">
             {/* Map Background */}
             <div
-              className="absolute inset-0 w-full h-full"
+              className="absolute inset-0 w-full h-full animate-fade-in"
               style={{
                 backgroundImage: 'url(/map-background.png)',
                 backgroundSize: 'cover',
@@ -480,11 +619,11 @@ export default function InsightCard() {
             />
 
             {/* Localized Data Card - positioned on top of map */}
-            <div className="relative z-10 bg-white rounded-[10px] w-[591px] p-10 shadow-[0px_4px_8px_0px_rgba(0,0,0,0.1),0px_2px_16px_0px_rgba(0,0,0,0.1)] flex flex-col gap-10">
+            <div className="relative z-10 bg-white rounded-[10px] w-[591px] p-10 shadow-[0px_4px_8px_0px_rgba(0,0,0,0.1),0px_2px_16px_0px_rgba(0,0,0,0.1)] flex flex-col gap-10 animate-slide-in-up" style={{ animationDelay: '0.8s' }}>
               {/* Header with Metric and Location */}
               <div className="flex items-start justify-between w-full">
                 <p className="uppercase tracking-[1.08px] text-xs text-black font-medium">
-                  Average order value
+                  {currentIndex === 1 ? 'Peak sales hours' : 'Average order value'}
                 </p>
                 <p className="uppercase tracking-[1.08px] text-xs text-black font-medium">
                   Greenpoint, NY
@@ -493,62 +632,130 @@ export default function InsightCard() {
 
               {/* Insight Text */}
               <div className="flex flex-col gap-[10px] w-full text-[#101010]">
-                <p className="font-serif text-[32px] leading-[1.1] tracking-[-0.64px]">
-                  In Greenpoint, 7am hits peak order value at $24.20
-                </p>
-                <p className="font-normal text-base leading-[1.5]">
-                  That's 31% higher than the city-wide average of $18.50.
-                </p>
+                {currentIndex === 1 ? (
+                  // Clothing stores insight
+                  <>
+                    <p className="font-serif text-[32px] leading-[1.1] tracking-[-0.64px]">
+                      In Greenpoint, Friday 12-2pm sees 3x the traffic of weekday mornings
+                    </p>
+                    <p className="font-normal text-base leading-[1.5]">
+                      That's 42% higher than the Brooklyn average.
+                    </p>
+                  </>
+                ) : (
+                  // Other business types insight
+                  <>
+                    <p className="font-serif text-[32px] leading-[1.1] tracking-[-0.64px]">
+                      In Greenpoint, 7am hits peak order value at $24.20
+                    </p>
+                    <p className="font-normal text-base leading-[1.5]">
+                      That's 31% higher than the city-wide average of $18.50.
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Chart */}
-              <div className="flex gap-[10px] h-[320px]">
+              <div className="flex gap-[10px] h-[240px]">
                 {/* Y Axis Labels */}
-                <div className="flex flex-col justify-between pb-[25px] text-xs text-[#666666] tracking-[0.12px]">
-                  <span>$20</span>
-                  <span>$15</span>
-                  <span>$10</span>
-                  <span>$5</span>
-                  <span>0</span>
+                <div className="flex flex-col justify-between pb-[20px] text-xs text-[#666666] tracking-[0.12px]">
+                  {currentIndex === 1 ? (
+                    // Peak sales hours - days of week
+                    <>
+                      <span>Mon</span>
+                      <span>Tue</span>
+                      <span>Wed</span>
+                      <span>Thu</span>
+                      <span>Fri</span>
+                      <span>Sat</span>
+                      <span>Sun</span>
+                    </>
+                  ) : (
+                    // Average order value - dollars
+                    <>
+                      <span>$20</span>
+                      <span>$15</span>
+                      <span>$10</span>
+                      <span>$5</span>
+                      <span>0</span>
+                    </>
+                  )}
                 </div>
 
                 {/* Chart Area */}
                 <div className="flex-1 flex flex-col gap-[10px] relative">
                   {/* Grid Lines */}
-                  <div className="absolute left-[3px] right-0 top-0 bottom-[24px] flex flex-col justify-between z-0">
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="w-full h-[1px] bg-[#f0f0f0]" />
-                    ))}
+                  <div className="absolute left-[3px] right-0 top-0 bottom-[20px] flex flex-col justify-between z-0">
+                    {currentIndex === 1 ? (
+                      // Peak sales hours - 8 grid lines for 7 days
+                      [...Array(8)].map((_, i) => (
+                        <div key={i} className="w-full h-[1px] bg-[#f0f0f0]" />
+                      ))
+                    ) : (
+                      // Standard 5 grid lines
+                      [...Array(5)].map((_, i) => (
+                        <div key={i} className="w-full h-[1px] bg-[#f0f0f0]" />
+                      ))
+                    )}
                   </div>
 
-                  {/* Bars - 9 bars with Mission-specific data */}
-                  <div className="flex gap-[12px] items-end justify-end h-[295px] px-[10px] pb-px relative z-10">
-                    {[
-                      { height: 219, label: '6am', highlighted: false },
-                      { height: 281, label: '7am', highlighted: true },
-                      { height: 275, label: '8am', highlighted: true },
-                      { height: 273, label: '9am', highlighted: true },
-                      { height: 214, label: '10am', highlighted: false },
-                      { height: 223, label: '11am', highlighted: false },
-                      { height: 202, label: '12pm', highlighted: false },
-                      { height: 243, label: '1pm', highlighted: false },
-                      { height: 233, label: '2pm', highlighted: false },
-                    ].map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex-1 flex flex-col justify-end h-[294px] transition-opacity duration-300 group relative"
-                      >
-                        <div
-                          className={`w-full rounded-t-[6px] transition-all duration-200 cursor-pointer ${
-                            item.highlighted
-                              ? 'bg-black group-hover:brightness-125'
-                              : 'bg-[#dadada] group-hover:brightness-90'
-                          }`}
-                          style={{ height: `${item.height}px` }}
-                        />
+                  {currentIndex === 1 ? (
+                    // Clothing stores - Show heatmap with location-specific data
+                    <div className="h-[220px] px-[10px] pb-px relative z-10">
+                      <div className="w-full h-full flex flex-col gap-[2px]">
+                        {[
+                          { day: 'Mon', hours: ['low', 'low', 'low', 'medium', 'medium', 'low', 'low', 'medium', 'low'] },
+                          { day: 'Tue', hours: ['low', 'low', 'low', 'medium', 'low', 'medium', 'low', 'medium', 'low'] },
+                          { day: 'Wed', hours: ['low', 'medium', 'medium', 'high', 'low', 'medium', 'medium', 'high', 'low'] },
+                          { day: 'Thu', hours: ['low', 'medium', 'high', 'high', 'low', 'low', 'medium', 'medium', 'low'] },
+                          { day: 'Fri', hours: ['low', 'high', 'high', 'peak', 'medium', 'low', 'peak', 'peak', 'medium'] },
+                          { day: 'Sat', hours: ['medium', 'medium', 'high', 'medium', 'low', 'low', 'low', 'low', 'low'] },
+                          { day: 'Sun', hours: ['low', 'low', 'low', 'low', 'low', 'low', 'low', 'low', 'low'] },
+                        ].map((dayData, dayIndex) => (
+                          <div key={dayIndex} className="flex gap-[2px] flex-1">
+                            {dayData.hours.map((intensity, hourIndex) => {
+                              const intensityColor = getIntensityColor(intensity);
+                              return (
+                                <div
+                                  key={hourIndex}
+                                  className={`flex-1 ${intensityColor} rounded-[1px] transition-all duration-300 hover:brightness-110 cursor-pointer`}
+                                />
+                              );
+                            })}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ) : (
+                    // Other business types - Show bars with location-specific data
+                    <div className="flex gap-[12px] items-end justify-end h-[220px] px-[10px] pb-px relative z-10">
+                      {[
+                        { height: 163, label: '6am', highlighted: false },
+                        { height: 210, label: '7am', highlighted: true },
+                        { height: 205, label: '8am', highlighted: true },
+                        { height: 203, label: '9am', highlighted: true },
+                        { height: 160, label: '10am', highlighted: false },
+                        { height: 166, label: '11am', highlighted: false },
+                        { height: 151, label: '12pm', highlighted: false },
+                        { height: 181, label: '1pm', highlighted: false },
+                        { height: 174, label: '2pm', highlighted: false },
+                      ].map((item, index) => (
+                        <div
+                          key={index}
+                          className="flex-1 flex flex-col justify-end h-[220px] transition-opacity duration-300 group relative"
+                        >
+                          <div
+                            className={`w-full rounded-t-[6px] transition-all duration-200 cursor-pointer ${
+                              item.highlighted
+                                ? 'bg-black group-hover:brightness-125'
+                                : 'bg-[#dadada] group-hover:brightness-90'
+                            }`}
+                            style={{ height: `${item.height}px` }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* X Axis Labels */}
                   <div className="flex gap-[12px] items-start justify-start px-[10px] text-xs text-[#666666] tracking-[0.12px]">
@@ -565,7 +772,8 @@ export default function InsightCard() {
             {/* CTA Button */}
             <button
               onClick={handleCompareClick}
-              className="relative z-10 bg-black text-white px-8 py-4 rounded-full font-medium text-base hover:bg-gray-800 transition-colors"
+              className="relative z-10 bg-black text-white px-8 py-4 rounded-full font-medium text-base hover:bg-gray-800 transition-colors animate-fade-in-up"
+              style={{ animationDelay: '1.2s' }}
             >
               See how your business compares
             </button>
@@ -583,9 +791,9 @@ export default function InsightCard() {
               {/* Business Type Input */}
               <input
                 type="text"
-                defaultValue="coffee shops"
-                size={12}
-                className="font-serif text-[32px] leading-[1.1] tracking-[-0.64px] text-black bg-transparent outline-none text-center border-0 border-b-2 border-[#dadada] pb-1 cursor-text hover:border-[#666666] focus:border-black transition-colors caret-black"
+                defaultValue={businessTypes[currentIndex]}
+                className="font-serif text-[32px] leading-[1.1] tracking-[-0.64px] text-black bg-transparent outline-none text-center border-0 border-b-2 border-[#dadada] pb-1 cursor-text hover:border-[#666666] focus:border-black transition-colors caret-black w-auto min-w-0"
+                style={{ width: `${businessTypes[currentIndex].length * 0.6}em` }}
               />
             </div>
 
@@ -868,7 +1076,7 @@ export default function InsightCard() {
             {showConversionCard && (
               <div className="bg-black rounded-[10px] w-[591px] p-10 flex flex-col items-center gap-6 animate-fade-in">
                 <p className="font-serif text-[32px] leading-[1.1] tracking-[-0.64px] text-white text-center">
-                  Ready to unlock insights for your business?
+                  Ready to unlock insights for<br />your business?
                 </p>
                 <button className="bg-white text-black px-8 py-4 rounded-full font-medium text-base hover:bg-gray-100 transition-colors">
                   Get started
