@@ -1,0 +1,48 @@
+name: Deploy to Blockcell
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build Next.js app
+      run: npm run build
+      
+    - name: Deploy to Blockcell
+      env:
+        BLOCKCELL_API_KEY: ${{ secrets.BLOCKCELL_API_KEY }}
+      run: |
+        # Install goose CLI or use curl to deploy
+        # This would need the Blockcell API endpoint
+        echo "Built files ready for deployment in ./out"
+        ls -la out/
+        
+        # For now, this shows the build is successful
+        # You would need Blockcell API credentials to automate the upload
+        echo "✅ Build completed successfully"
+        echo "📁 Static files generated in ./out directory"
+        echo "🚀 Ready for Blockcell deployment"
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: nextjs-build
+        path: out/
