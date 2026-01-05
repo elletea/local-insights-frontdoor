@@ -17,14 +17,18 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'npm'
         
-    - name: Install dependencies
-      run: npm ci
+    - name: Clean install dependencies
+      run: |
+        rm -rf node_modules package-lock.json
+        npm install
       
     - name: Build Next.js app
-      run: npm run build
+      run: |
+        # Ensure next is available in PATH
+        npx next build
       
     - name: Deploy to Blockcell
       env:
